@@ -65,4 +65,4 @@ Open `index.html` directly (`file://` works). All state is local; nothing leaves
 
 - Session power *labels* for the original A/B/C families are still literal strings (the intensity profiles used by charts/tables are dynamic); converting them fully to computed values is planned.
 - TSB is currently a manual input — computing CTL/ATL automatically from a logged training history is the main v2 candidate.
-- Persistence is browser-local (no sync, no export).
+- Persistence is browser-local (no sync). Each workout detail modal can export the session as **.ZWO** (Zwift), **.FIT** (Garmin) or **.MRC** (TrainerRoad) — see `doc/prd/prd-002-impl-notes.md`.

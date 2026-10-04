@@ -251,6 +251,11 @@
   .modal-targets span { display: block; color: var(--text-dim); font-size: .7rem; text-transform: uppercase; letter-spacing: .5px; }
   .modal-targets b { color: var(--text); }
   .modal .tbl td, .modal .tbl th { font-size: .8rem; }
+  .export-row { display: flex; align-items: center; gap: 8px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .export-row .export-label { font-size: .78rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px; }
+  .export-btn { background: var(--bg-inset); border: 1px solid var(--border); color: var(--text); font: inherit; font-size: .8rem; font-weight: 700; padding: 5px 12px; border-radius: 6px; cursor: pointer; }
+  .export-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .export-note { font-size: .72rem; color: var(--text-dim); margin-left: auto; }
   .workout .locktag { margin-top: 6px; font-size: .68rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
   .workout h3 { font-size: .95rem; margin-top: 2px; }
   .workout svg.chart { width: 100%; height: 64px; margin: 10px 0 6px; display: block; background: var(--bg-inset); border-radius: 6px; }
@@ -917,14 +922,259 @@ function openModal(code) {
       ${structureRows(w)}
     </table>
     <p class="spine ${w.spine}" style="margin-top:14px">${w.spine === "ok" ? "✔" : "⚠"} ${w.spineNote}</p>
+    <div class="export-row">
+      <span class="export-label">Exporter :</span>
+      <button type="button" class="export-btn" data-export="zwo" title="Zwift">.ZWO</button>
+      <button type="button" class="export-btn" data-export="fit" title="Garmin">.FIT</button>
+      <button type="button" class="export-btn" data-export="mrc" title="TrainerRoad">.MRC</button>
+      <span class="export-note">Puissances calculées avec FTP ${PARAMS.ftp} W</span>
+    </div>
   `;
   document.getElementById("modal-overlay").classList.add("open");
   document.getElementById("modal-close").addEventListener("click", closeModal);
+  document.querySelectorAll("#modal-body .export-btn").forEach(btn =>
+    btn.addEventListener("click", () => EXPORT.exportWorkout(w.code, btn.dataset.export)));
 }
 
 function closeModal() {
   document.getElementById("modal-overlay").classList.remove("open");
 }
+
+/* =============== EXPORT (PRD-002) : .ZWO / .FIT / .MRC =============== */
+/* EXPORT-BEGIN — extraction pour tests Node (ne pas renommer les marqueurs) */
+
+const EXPORT = (() => {
+
+  // Convertit une entrée WORKOUTS (segments [minutes, %FTP]) en modèle PRD.
+  function workoutToExport(w, ftp) {
+    const steps = w.segments.map(([min, pct]) => ({
+      type: "steady",
+      durationSeconds: Math.round(min * 60),
+      powerTarget: { type: "pct_ftp", value: pct }
+    }));
+    return {
+      id: w.code,
+      title: w.title,
+      description: (typeof DESC !== "undefined" && DESC[w.code]) ? DESC[w.code] : w.title,
+      author: "HomeTrainer HQ",
+      sportType: "bike",
+      ftp,
+      steps
+    };
+  }
+
+  function xmlEscape(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  }
+
+  // .ZWO — Zwift workout format (XML, puissances relatives à la FTP)
+  function generateZwo(workout) {
+    const blocks = workout.steps.map(st => {
+      const d = st.durationSeconds;
+      if (st.type === "interval") {
+        return `<IntervalsT Repeat="${st.repeatCount}" OnDuration="${d}" OnPower="${round2(st.powerTarget.value)}" OffDuration="${st.restDurationSeconds}" OffPower="${round2(st.restPowerTarget)}"${st.cadenceTarget ? ` Cadence="${st.cadenceTarget}"` : ""}/>`;
+      }
+      return `<SteadyState Duration="${d}" Power="${round2(st.powerTarget.value)}"${st.cadenceTarget ? ` Cadence="${st.cadenceTarget}"` : ""}/>`;
+    }).join("\n        ");
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<workout_file>
+    <author>${xmlEscape(workout.author)}</author>
+    <name>${xmlEscape(workout.title)}</name>
+    <description>${xmlEscape(workout.description)}</description>
+    <sportType>${workout.sportType}</sportType>
+    <tags/>
+    <workout>
+        ${blocks}
+    </workout>
+</workout_file>
+`;
+  }
+
+  const round2 = n => Math.round(n * 100) / 100;
+
+  // .MRC — %FTP, points d'inflexion en minutes cumulées (tabulation comme séparateur)
+  function generateMrc(workout) {
+    const lines = [
+      "[COURSE HEADER]",
+      "VERSION = 2",
+      "UNITS = ENGLISH",
+      `DESCRIPTION = ${workout.title}`,
+      `FILE NAME = ${workout.id}`,
+      "MINUTES %FTP",
+      "[END COURSE HEADER]",
+      "[COURSE DATA]"
+    ];
+    let t = 0, prev = null;
+    for (const st of workout.steps) {
+      const pct = st.powerTarget.value;
+      if (prev === null || pct !== prev) {
+        lines.push(`${(t / 60).toFixed(2)}\t${round2(pct * 100)}`);
+        prev = pct;
+      }
+      t += st.durationSeconds;
+      lines.push(`${(t / 60).toFixed(2)}\t${round2(pct * 100)}`);
+    }
+    lines.push("[END COURSE DATA]");
+    return lines.join("\n") + "\n";
+  }
+
+  // ---------------- Encodeur FIT minimal (Workout file) ----------------
+
+  const FIT_MSG_FILE_ID = 0, FIT_MSG_WORKOUT = 26, FIT_MSG_WORKOUT_STEP = 27;
+
+  // CRC-16 FIT : réplique exacte de l'algorithme du SDK Garmin (table de nibbles)
+  const CRC_TABLE = [
+    0x0000, 0xCC01, 0xD801, 0x1400, 0xF001, 0x3C00, 0x2800, 0xE401,
+    0xA001, 0x6C00, 0x7800, 0xB401, 0x5000, 0x9C01, 0x8801, 0x4400
+  ];
+  function crc16(bytes) {
+    let crc = 0;
+    const upd = (value, crc) => {
+      let t = CRC_TABLE[crc & 0xF];
+      crc = (crc >> 4) & 0x0FFF;
+      crc = crc ^ t ^ CRC_TABLE[value & 0xF];
+      t = CRC_TABLE[crc & 0xF];
+      crc = (crc >> 4) & 0x0FFF;
+      return crc ^ t ^ CRC_TABLE[(value >> 4) & 0xF];
+    };
+    for (const b of bytes) crc = upd(b, crc);
+    return crc;
+  }
+
+  function fitString(s) {
+    // ASCII, tronqué à n octets max
+    return [...String(s)].map(c => c.charCodeAt(0) < 128 ? c : "?").join("");
+  }
+
+  function buildFit(workout) {
+    const now = Math.floor(Date.now() / 1000) - 631065600; // timestamp FIT (s depuis 1989-12-31)
+    const steps = workout.steps;
+    const numSteps = steps.length;
+
+    // Structuration générique : chaque message = liste [fieldNum, size, typeCode, value]
+    function field(num, size, type, value) { return { num, size, type, value }; }
+
+    // file_id : type(0) u8, manufacturer(1) u16, product(2) u16, serial_number(3) u32z, time_created(4) u32
+    const fileIdFields = [
+      field(0, 1, 0x86, 5),       // enum
+      field(1, 2, 0x84, 255),     // uint16
+      field(2, 2, 0x84, 0),
+      field(3, 4, 0x8C, Math.floor(Date.now() / 1000) & 0xFFFFFFFF), // uint32z
+      field(4, 4, 0x86, now)      // uint32
+    ];
+
+    // workout : sport(4) enum, num_valid_steps(6) u16, wkt_name(8) string (max 15 + NUL)
+    const wktName = fitString(workout.title).slice(0, 15);
+    const workoutFields = [
+      field(4, 1, 0x00, 2),                 // sport = 2 (cycling)
+      field(6, 2, 0x84, numSteps),          // num_valid_steps
+      field(8, Math.min(wktName.length, 15) + 1, 0x07, wktName) // wkt_name (NUL-terminé)
+    ];
+
+    // workout_step (numéros de champs du profil FIT officiel) :
+    // message_index(254) u16, intensity(7) enum, duration_type(1) enum,
+    // duration_value(2) u32 ms, target_type(3) enum, custom_target_value_low(5)/high(6) u32
+    const stepFieldsList = steps.map((st, i) => {
+      const pct = st.powerTarget.value;
+      const watts = Math.round(pct * workout.ftp);
+      return [
+        field(254, 2, 0x84, i),             // message_index
+        field(7, 1, 0x00, 0),               // intensity = 0 (active)
+        field(1, 1, 0x00, 0),               // duration_type = 0 (time)
+        field(2, 4, 0x86, st.durationSeconds * 1000), // duration_value : time (ms)
+        field(3, 1, 0x00, 2),               // target_type = 2 (power)
+        field(5, 4, 0x86, watts + 1000),    // custom_target_power_low (offset +1000)
+        field(6, 4, 0x86, watts + 1000)     // custom_target_power_high
+      ];
+    });
+
+    const messages = [
+      { num: FIT_MSG_FILE_ID, fields: fileIdFields, timestamp: true },
+      { num: FIT_MSG_WORKOUT, fields: workoutFields },
+      ...stepFieldsList.map((f, i) => ({ num: FIT_MSG_WORKOUT_STEP, fields: f, timestamp: i === 0 }))
+    ];
+
+    // --- assemblage ---
+    const body = [];
+    for (const msg of messages) {
+      const [def, data] = encodeMessage(msg.num, msg.fields);
+      body.push(...def, ...data);
+    }
+
+    const bodyLen = body.length;
+    const header = new Uint8Array(14);
+    header[0] = 14; header[1] = 0x20; // header size, protocol 1.0 + profiles 1.0
+    header[2] = 0x10; header[3] = 0x00; // .FIT
+    header[4] = bodyLen & 0xFF; header[5] = (bodyLen >>> 8) & 0xFF;
+    header[6] = (bodyLen >>> 16) & 0xFF; header[7] = (bodyLen >>> 24) & 0xFF;
+    header[8] = 0x2E; header[9] = 0x46; header[10] = 0x49; header[11] = 0x54; // ".FIT"
+    const headCrc = crc16(header.subarray(0, 12));
+    header[12] = headCrc & 0xFF; header[13] = (headCrc >>> 8) & 0xFF;
+
+    const fileCrcBytes = [...header, ...body];
+    const fileCrc = crc16(fileCrcBytes);
+    return new Uint8Array([...fileCrcBytes, fileCrc & 0xFF, (fileCrc >>> 8) & 0xFF]);
+  }
+
+  // Encode un message FIT : definition record (local type 0, réutilisé puis réécrit à chaque
+  // message pour rester simple et robuste) + data record.
+  function encodeMessage(globalMsgNum, fields) {
+    const def = new Uint8Array(6 + fields.length * 3);
+    def[0] = 0x40; // definition, local type 0, pas de timestamp
+    def[1] = 0;    // reserved
+    def[2] = 0;    // architecture little-endian
+    def[3] = globalMsgNum & 0xFF; def[4] = (globalMsgNum >>> 8) & 0xFF;
+    def[5] = fields.length;
+    fields.forEach((f, i) => {
+      const o = 6 + i * 3;
+      def[o] = f.num; def[o + 1] = f.size; def[o + 2] = f.type;
+    });
+
+    const data = [0x00]; // data record header (local type 0)
+    for (const f of fields) {
+      const v = f.value;
+      if (f.type === 0x07) { // string → f.size octets ASCII, NUL padding
+        const s = fitString(v);
+        for (let i = 0; i < f.size; i++) data.push(i < s.length ? s.charCodeAt(i) : 0);
+      } else {
+        // u8/u16/u32/u32z/u8z/enum : little-endian, f.size octets
+        for (let i = 0; i < f.size; i++) data.push((v >>> (8 * i)) & 0xFF);
+      }
+    }
+    return [def, new Uint8Array(data)];
+  }
+
+  // ---------------- Utilitaires UI ----------------
+
+  function slugify(s) {
+    return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+
+  function downloadBlob(filename, mime, data) {
+    const blob = data instanceof Uint8Array
+      ? new Blob([data], { type: mime })
+      : new Blob([data], { type: mime, endings: "native" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function exportWorkout(code, format) {
+    const w = byCode[code];
+    const workout = workoutToExport(w, PARAMS.ftp);
+    const base = slugify(`${w.code} ${w.title}`);
+    if (format === "zwo") downloadBlob(`${base}.zwo`, "application/xml", generateZwo(workout));
+    else if (format === "fit") downloadBlob(`${base}.fit`, "application/octet-stream", buildFit(workout));
+    else if (format === "mrc") downloadBlob(`${base}.mrc`, "text/plain", generateMrc(workout));
+  }
+
+  return { workoutToExport, generateZwo, generateMrc, generateFit: buildFit, slugify, downloadBlob, exportWorkout };
+})();
+/* EXPORT-END */
 
 
 /* =============== Mini-chart SVG =============== */
