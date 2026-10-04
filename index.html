@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeTrainer HQ</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-card: #161b22;
+    --bg-inset: #0a0e14;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --blue: #58a6ff;
+    --red: #f85149;
+    --amber: #d29922;
+    --z1: #9be9c8; --z2: #58a6ff; --z3: #d29922; --z4: #f85149; --z5: #ff6ec7;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    padding-bottom: 60px;
+  }
+  header {
+    background: linear-gradient(135deg, #10151d 0%, #0d1117 60%);
+    border-bottom: 2px solid var(--accent);
+    padding: 28px 20px 22px;
+    text-align: center;
+  }
+  header h1 { font-size: 1.35rem; letter-spacing: 1px; text-transform: uppercase; }
+  header h1 span { color: var(--accent); }
+  header h1 .hq { color: var(--green); }
+  header .sub { color: var(--text-dim); font-size: .85rem; margin-top: 6px; }
+  header .chips { margin-top: 10px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  header .chips span {
+    font-size: .72rem; font-variant-numeric: tabular-nums;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 999px; padding: 2px 10px; color: var(--text-dim);
+  }
+  header .chips b { color: var(--text); }
+  header .chips input {
+    display: none; width: 62px; background: var(--bg-inset); color: var(--text);
+    border: 1px solid var(--accent); border-radius: 6px; font-size: .78rem;
+    padding: 1px 6px; font-variant-numeric: tabular-nums; outline: none;
+  }
+  header.editing .chips input { display: inline-block; }
+  header.editing .chips b.val { display: none; }
+  #edit-params {
+    background: var(--bg-card); border: 1px solid var(--border); color: var(--text-dim);
+    border-radius: 999px; width: 30px; height: 30px; cursor: pointer; font-size: .85rem;
+    display: inline-flex; align-items: center; justify-content: center; line-height: 1;
+  }
+  #edit-params:hover { color: var(--text); border-color: var(--accent); }
+  #reset-params {
+    background: var(--bg-card); border: 1px solid var(--border); color: var(--text-dim);
+    border-radius: 999px; width: 30px; height: 30px; cursor: pointer; font-size: .85rem;
+    display: none; align-items: center; justify-content: center; line-height: 1;
+  }
+  header.editing #reset-params { display: inline-flex; }
+  #reset-params:hover { color: var(--red); border-color: var(--red); }
+  header #goal-input {
+    display: none; width: min(560px, 90%); margin: 8px auto 0;
+    background: var(--bg-inset); color: var(--text); border: 1px solid var(--accent);
+    border-radius: 8px; font-size: .85rem; padding: 6px 10px; outline: none;
+  }
+  header.editing #goal-input { display: block; }
+  header.editing .sub { display: none; }
+  main { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+
+  /* ---------- Tabs nav ---------- */
+  nav.tabs {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg-card); border-bottom: 1px solid var(--border);
+    display: flex; gap: 4px; padding: 8px 16px;
+    max-width: 1100px; margin: 0 auto;
+    overflow-x: auto; white-space: nowrap; scrollbar-width: none;
+  }
+  nav.tabs::-webkit-scrollbar { display: none; }
+  nav.tabs button { flex: 0 0 auto; }
+  nav.tabs button {
+    background: none; border: 1px solid transparent; color: var(--text-dim);
+    font-size: .82rem; font-weight: 600; text-transform: uppercase; letter-spacing: .6px;
+    padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  }
+  nav.tabs button:hover { color: var(--text); }
+  nav.tabs button.active { color: var(--accent); border-color: var(--accent); }
+  .view { display: none; }
+  .view.active { display: block; }
+  section { margin-top: 28px; }
+  h2 {
+    font-size: 1rem; text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--text-dim); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+  /* ---------- Section 1 : methodology ---------- */
+  details.methodo {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 8px; overflow: hidden;
+  }
+  details.methodo summary {
+    cursor: pointer; padding: 14px 16px; font-weight: 600;
+    list-style: none; display: flex; align-items: center; gap: 10px;
+  }
+  details.methodo summary::-webkit-details-marker { display: none; }
+  details.methodo summary::before { content: "▸"; color: var(--accent); transition: transform .15s; }
+  details.methodo[open] summary::before { transform: rotate(90deg); }
+  details.methodo .body { padding: 0 18px 16px; color: var(--text-dim); font-size: .9rem; }
+  details.methodo .body strong, details.methodo .body b { color: var(--text); }
+  details.methodo .body .rule { margin-top: 10px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 14px; }
+  .kpi {
+    background: var(--bg-inset); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
+  }
+  .kpi h4 { font-size: .8rem; text-transform: uppercase; letter-spacing: .5px; color: var(--accent); margin-bottom: 4px; }
+  .kpi p { font-size: .82rem; }
+  .zonebar { display: flex; margin-top: 14px; border-radius: 6px; overflow: hidden; font-size: .7rem; text-align: center; font-variant-numeric: tabular-nums; }
+  .zonebar div { padding: 5px 2px; color: #0d1117; font-weight: 700; overflow: hidden; white-space: nowrap; }
+  .zonebar .z1 { background: var(--z1); }
+  .zonebar .z2 { background: var(--z2); }
+  .zonebar .z3 { background: var(--z3); }
+  .zonebar .z4 { background: var(--z4); }
+  .zonebar .z5 { background: var(--z5); }
+  .zonebar .z6 { background: #ff9ad5; }
+  .zonebar .z7 { background: #d8c2ff; }
+
+  /* ---------- Section 2 : decision engine ---------- */
+  .engine {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px;
+  }
+  .engine form {
+    display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;
+    padding-bottom: 22px; /* espace pour les messages d'erreur absolus */
+  }
+  .field { position: relative; display: flex; flex-direction: column; gap: 5px; min-width: 130px; flex: 1; }
+  .field label { font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; color: var(--text-dim); }
+  .field label .lc { text-transform: none; }
+  .field input, .field select {
+    background: var(--bg-inset); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 10px 12px; font-size: 1rem; font-variant-numeric: tabular-nums;
+    outline: none; width: 100%;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  button.primary {
+    background: var(--accent); color: #0d1117; font-weight: 700; border: none;
+    border-radius: 8px; padding: 11px 22px; font-size: .95rem; cursor: pointer; letter-spacing: .5px;
+  }
+  button.primary:hover { filter: brightness(1.15); }
+  .field .err { position: absolute; top: 100%; left: 0; margin-top: 3px; font-size: .72rem; color: var(--red); display: none; }
+  .field.invalid input { border-color: var(--red); }
+  .field.invalid .err { display: block; }
+
+  #result { margin-top: 18px; }
+  .result-card {
+    border-radius: var(--radius); padding: 16px 18px; border: 1px solid var(--border);
+    background: var(--bg-inset); border-left: 5px solid var(--border);
+    animation: pop .25s ease-out;
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
+  .result-card.red    { border-left-color: var(--red);   background: rgba(248,81,73,.08); }
+  .result-card.green  { border-left-color: var(--green); background: rgba(63,185,80,.08); }
+  .result-card.blue   { border-left-color: var(--blue);  background: rgba(88,166,255,.08); }
+  .result-card.amber  { border-left-color: var(--amber); background: rgba(210,153,34,.08); }
+  .result-card .status { font-size: .78rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+  .result-card.red   .status { color: var(--red); }
+  .result-card.green .status { color: var(--green); }
+  .result-card.blue  .status { color: var(--blue); }
+  .result-card.amber .status { color: var(--amber); }
+  .result-card .presc { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+  .result-card .presc .code {
+    font-size: 1.5rem; font-weight: 800; color: var(--text); cursor: pointer;
+    text-decoration: underline dotted var(--text-dim); text-underline-offset: 4px;
+  }
+  .result-card .presc .title { font-size: 1rem; color: var(--text-dim); }
+  .result-card .targets { margin-top: 10px; font-variant-numeric: tabular-nums; font-size: .88rem; }
+  .result-card .targets span { margin-right: 18px; }
+  .result-card .targets b { color: var(--text); }
+  .result-card .note { margin-top: 10px; font-size: .8rem; color: var(--text-dim); font-style: italic; }
+  .result-card .alts { margin-top: 6px; font-size: .78rem; color: var(--text-dim); }
+  .result-card .alts button {
+    background: none; border: none; color: var(--accent); cursor: pointer; font-size: .78rem;
+    text-decoration: underline; padding: 0; margin-right: 10px;
+  }
+  .result-card .alts .ok { color: var(--green); }
+  .result-card .alts .no { color: var(--red); }
+
+  /* ---------- Section 3 : matrix ---------- */
+  .matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .matrix { grid-template-columns: 1fr; } }
+  .workout {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column;
+    scroll-margin-top: 20px;
+  }
+  .workout.flash { animation: flash 1.2s ease-out; }
+  @keyframes flash { 0% { box-shadow: 0 0 0 3px var(--accent); } 100% { box-shadow: none; } }
+  .workout .head { display: flex; justify-content: space-between; align-items: baseline; }
+  .workout .code { font-size: 1.25rem; font-weight: 800; }
+  .workout .fam { font-size: .68rem; padding: 2px 8px; border-radius: 999px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+  .fam.a { background: rgba(63,185,80,.15); color: var(--green); border: 1px solid rgba(63,185,80,.4); }
+  .fam.b { background: rgba(248,81,73,.15); color: var(--red); border: 1px solid rgba(248,81,73,.4); }
+  .fam.c { background: rgba(210,153,34,.15); color: var(--amber); border: 1px solid rgba(210,153,34,.4); }
+  .fam.d { background: rgba(188,140,255,.15); color: #bc8cff; border: 1px solid rgba(188,140,255,.4); }
+  .fam.e { background: rgba(255,110,199,.15); color: #ff6ec7; border: 1px solid rgba(255,110,199,.4); }
+  .workout.locked { opacity: .5; }
+  .workout .lockmsg { margin-top: 6px; font-size: .72rem; color: var(--red); display: none; }
+  .workout.locked .lockmsg { display: block; }
+  .workout .hl-badge { display: inline-block; visibility: hidden; font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; padding: 2px 8px; border-radius: 999px; align-self: flex-start; height: 21px; line-height: 1.25; box-sizing: border-box; border: 1px solid transparent; }
+  .workout.recommended { border-color: var(--green); box-shadow: 0 0 0 2px rgba(63,185,80,.30); }
+  .workout.recommended .hl-badge { visibility: visible; background: rgba(63,185,80,.18); color: var(--green); border: 1px solid rgba(63,185,80,.45); }
+  .workout.alt { border-color: rgba(210,153,34,.55); }
+  .workout.alt .hl-badge { visibility: visible; background: rgba(210,153,34,.15); color: var(--amber); border: 1px solid rgba(210,153,34,.45); }
+  /* ---------- Modal workout ---------- */
+  .workout { cursor: pointer; }
+  .workout:hover { border-color: var(--text-dim); }
+  .workout.recommended:hover { border-color: var(--green); }
+  .workout.alt:hover { border-color: rgba(210,153,34,.7); }
+  #modal-overlay {
+    position: fixed; inset: 0; background: rgba(1,4,9,.78);
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 4vh 16px; z-index: 60; overflow-y: auto;
+  }
+  #modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; width: min(920px, 94vw); max-height: 90vh;
+    overflow-y: auto; padding: 22px 26px; position: relative;
+    box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  }
+  .modal-head { display: flex; align-items: flex-start; gap: 14px; }
+  .modal-head .fam { display: inline-block; margin-top: 4px; }
+  .modal-head h3 { margin: 0 0 4px; }
+  .modal-close {
+    margin-left: auto; background: var(--bg-inset); color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: 8px; width: 34px; height: 34px;
+    cursor: pointer; font-size: 1rem; flex: 0 0 auto;
+  }
+  .modal-close:hover { color: var(--text); border-color: var(--accent); }
+  svg.chart.big { width: 100%; height: 220px; margin: 16px 0; }
+  .modal-targets { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 16px 0 4px; }
+  .modal-targets div { background: var(--bg-inset); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: .82rem; }
+  .modal-targets span { display: block; color: var(--text-dim); font-size: .7rem; text-transform: uppercase; letter-spacing: .5px; }
+  .modal-targets b { color: var(--text); }
+  .modal .tbl td, .modal .tbl th { font-size: .8rem; }
+  .workout .locktag { margin-top: 6px; font-size: .68rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+  .workout h3 { font-size: .95rem; margin-top: 2px; }
+  .workout svg.chart { width: 100%; height: 64px; margin: 10px 0 6px; display: block; background: var(--bg-inset); border-radius: 6px; }
+  .workout .meta { font-size: .78rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+  .workout .meta div { display: flex; justify-content: space-between; padding: 2px 0; }
+  .workout .meta b { color: var(--text); }
+  .workout .spine { margin-top: 6px; font-size: .72rem; }
+  .spine.ok { color: var(--green); }
+  .spine.watch { color: var(--amber); }
+
+  /* ---------- Toast ---------- */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--bg-card); border: 1px solid var(--accent); color: var(--text);
+    padding: 10px 20px; border-radius: 999px; font-size: .85rem;
+    transition: transform .25s ease-out; pointer-events: none; z-index: 99;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ---------- Logic view ---------- */
+  .logic-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px; margin-bottom: 16px; font-size: .9rem;
+  }
+  .logic-card h3 { font-size: .95rem; margin-bottom: 10px; }
+  .logic-card p { color: var(--text-dim); }
+  .logic-card p b, .logic-card p strong { color: var(--text); }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: .82rem; margin-top: 10px; }
+  table.tbl th, table.tbl td { padding: 8px 10px; border: 1px solid var(--border); text-align: left; }
+  table.tbl th { color: var(--text-dim); text-transform: uppercase; font-size: .7rem; letter-spacing: .5px; background: var(--bg-inset); }
+  table.tbl td b { color: var(--text); }
+  /* Zones view (couleurs Garmin) */
+  tr.zc1 td.zname { background: #9aa0a6; color: #0d1117; }
+  tr.zc2 td.zname { background: #58a6ff; color: #0d1117; }
+  tr.zc3 td.zname { background: #3fb950; color: #0d1117; }
+  tr.zc4 td.zname { background: #d29922; color: #0d1117; }
+  tr.zc5 td.zname { background: #f85149; color: #0d1117; }
+  tr.zc6 td.zname { background: #ff6ec7; color: #0d1117; }
+  tr.zc7 td.zname { background: #bc8cff; color: #0d1117; }
+  td.zname { font-weight: 800; text-align: center; width: 60px; font-size: .75rem; }
+  /* ---------- User Profile ---------- */
+  .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .profile-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px;
+  }
+  .profile-card h4 { font-size: .8rem; text-transform: uppercase; letter-spacing: .5px; color: var(--accent); margin-bottom: 6px; }
+  .profile-card .field { min-width: 0; }
+  .profile-card .desc { margin-top: 8px; font-size: .78rem; color: var(--text-dim); }
+  .field .unit { display: block; font-size: .72rem; color: var(--text-dim); margin-top: 3px; }
+  .badge { font-weight: 700; white-space: nowrap; }
+  .badge.red { color: var(--red); } .badge.green { color: var(--green); }
+  .badge.blue { color: var(--blue); } .badge.amber { color: var(--amber); }
+  pre.tree {
+    background: var(--bg-inset); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; overflow-x: auto; font-size: .74rem; line-height: 1.5;
+    color: var(--text-dim); margin-top: 10px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  pre.tree b { color: var(--text); }
+  a.glink {
+    color: var(--accent); text-decoration: underline dotted var(--text-dim);
+    text-underline-offset: 3px; cursor: pointer; font-weight: 600;
+  }
+  a.glink:hover { color: var(--green); }
+  a.ilink { font-size: .8rem; color: var(--text-dim); text-decoration: none; margin-left: 4px; }
+  a.ilink:hover { color: var(--accent); }
+  a.tablink {
+    color: var(--accent); text-decoration: underline dotted var(--text-dim);
+    text-underline-offset: 3px; cursor: pointer;
+  }
+  a.tablink:hover { color: var(--green); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Home<span>Trainer</span> <span class="hq">HQ</span></h1>
+  <p class="sub" id="goal-text">Objectif : Get fit. Build volume. Layer intensity.</p>
+  <input type="text" id="goal-input" placeholder="Objectif de la saison…" maxlength="120">
+  <div class="chips" id="chips">
+    <span>FTP <b class="val" id="v-ftp"></b><input type="number" id="chip-ftp" step="1" inputmode="numeric"></span>
+    <span title="Moyenne de la VFC sur 7 jours">VFC 7j <b class="val" id="v-hrv"></b><input type="number" id="chip-hrv" step="1" inputmode="numeric"></span>
+    <button type="button" id="edit-params" title="Modifier les paramètres">✎</button>
+    <button type="button" id="reset-params" title="Réinitialiser les paramètres">⟳</button>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button type="button" data-view="dashboard" class="active">📊 Dashboard</button>
+  <button type="button" data-view="logic">📘 Playbook</button>
+  <button type="button" data-view="zones">🎯 Zones</button>
+  <button type="button" data-view="profile">👤 Profil</button>
+  <button type="button" data-view="glossary">📖 Glossaire</button>
+</nav>
+
+<main>
+<div class="view active" id="view-dashboard">
+
+  <!-- ============ SECTION 1 ============ -->
+  <section id="engine">
+    <h2>État du matin → Séance du jour</h2>
+    <div class="engine">
+      <form id="engine-form" novalidate>
+        <div class="field" id="f-rmssd">
+          <label for="rmssd">VFC nuit <span class="lc">(ms)</span></label>
+          <input type="number" id="rmssd" step="1" placeholder="ex. 78" inputmode="numeric">
+          <span class="err">Champ requis (nombre).</span>
+        </div>
+        <div class="field" id="f-tsb">
+          <label for="tsb">Forme / TSB</label>
+          <input type="number" id="tsb" step="1" placeholder="ex. -15" inputmode="numeric">
+          <span class="err">Champ requis (nombre).</span>
+        </div>
+        <div class="field">
+          <label for="time">Temps dispo</label>
+          <select id="time">
+            <option value="30">30 min</option>
+            <option value="45">45 min</option>
+            <option value="60" selected>60 min</option>
+            <option value="90">90 min</option>
+            <option value="120">120 min +</option>
+          </select>
+        </div>
+        <button type="submit" class="primary">Évaluer</button>
+      </form>
+      <div id="result" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 3 ============ -->
+  <section id="library">
+    <h2>2 · Bibliothèque d'entraînement (5×3)</h2>
+    <div class="matrix" id="matrix"></div>
+  </section>
+</div><!-- /view-dashboard -->
+
+<div class="view" id="view-logic">
+  <section id="logic">
+    <h2>Playbook — Logique du moteur de coaching</h2>
+
+    <h3 style="font-size:.85rem; text-transform:uppercase; letter-spacing:.8px; color:var(--text-dim); margin:4px 0 10px">Les 3 principes de base</h3>
+
+    <details class="methodo">
+      <summary>La règle polarisée — pourquoi tout part de la Z2</summary>
+      <div class="body">
+        <p class="rule">L'endurance <strong>Z2 (<span id="polar-z2-watts"></span>)</strong> augmente la densité mitochondriale et capillaire
+        sans fatigue autonome excessive. C'est le socle : <b>~75–80 % du volume hebdomadaire</b>.
+        L'intensité (Z3/Z4) n'est rentable que <b>posée sur cette base</b>, par fenêtres courtes, en cadence élevée.</p>
+        <div class="zonebar" id="polar-bar" aria-label="Répartition hebdomadaire cible par zone"></div>
+        <p style="margin-top:6px; font-size:.72rem; color:var(--text-dim)">Répartition hebdomadaire cible du temps d'entraînement — bornes en watts dans l'onglet Zones.</p>
+      </div>
+    </details>
+
+    <details class="methodo">
+      <summary>Les 3 KPI qui pilotent la charge</summary>
+      <div class="body">
+        <div class="kpis">
+          <div class="kpi"><h4>CTL — Fitness</h4><p>Charge chronique sur 42 jours. Objectif : <b>croissance régulière</b>, +3 à +5 CTL/mois. Pas de bond brutal.</p></div>
+          <div class="kpi"><h4>TSB — Forme</h4><p><b>CTL − ATL</b>. Cible : <b>−10 à −25</b> en phase de construction. <b>&lt; −30 = ligne rouge</b> → décharge obligatoire.</p></div>
+          <div class="kpi"><h4>VFC — état nerveux</h4><p>Indicateur parasympathique immédiat. Moyenne 7 j : <b id="kpi-hrv-baseline"></b>. Un effondrement de la mesure du matin sous cette moyenne = stress nerveux → pas d'intensité.</p></div>
+        </div>
+      </div>
+    </details>
+
+    <details class="methodo">
+      <summary>Contexte de douleur — quand l'intensité est proscrite</summary>
+      <div class="body">
+        <p class="rule">Dans certains contextes — typiquement une <strong>douleur rachidienne (lombaire) active</strong> —
+        les efforts en intensité forte sont <b>proscrits</b> : les zones Z4/Z5 combinent puissance élevée et couple important,
+        ce qui aggrave la contrainte sur le dos. La règle dans ce cas : <b>retour au volume doux (Z1–Z2) en cadence élevée
+        (90–95+ rpm)</b>, position fréquente modifiée (15 min assis / 5 min mains hautes), et reprise progressive de
+        l'intensité seulement une fois la douleur disparue plusieurs jours. Ce contexte peut être formalisé dans
+        <a class="tablink" data-view="profile" data-focus="profile-goal">l'Objectif (onglet Profil)</a> pour orienter le coaching.</p>
+      </div>
+    </details>
+
+    <h3 style="font-size:.85rem; text-transform:uppercase; letter-spacing:.8px; color:var(--text-dim); margin:22px 0 10px">Choix de l'entraînement</h3>
+
+    <div class="logic-card">
+      <h3>L'arbre d'évaluation (priorité = sécurité)</h3>
+      <p>Le moteur évalue les conditions dans cet ordre. La VFC agit comme <b>veto absolu</b> :
+      même en pleine fenêtre verte, un système nerveux effondré bloque toute intensité.</p>
+      <pre class="tree">                 VFC &lt; <span class="dyn-vfc-th">85 % de VFC 7j</span> ?
+                ┌──────┴──────┐
+               OUI           NON
+                │             │
+        <b>🔴 ROUGE (nerveux)</b>   TSB &lt; −30 ?
+      Aucune intensité      ┌──────┴──────┐
+      → A1 ou Repos        OUI           NON
+                            │             │
+                    <b>🔴 ROUGE (physique)</b>  −25 ≤ TSB ≤ −10 ?
+                    Décharge         ┌──────┴──────┐
+                    → A1 ou Repos    OUI           NON
+                              <b>🟢 VERT</b>       TSB &gt; −10 ?
+                        Fenêtre de    ┌──────┴──────┐
+                        construction OUI           NON
+                        → B/C selon  <b>🔵 BLEU</b>     <b>🟡 AMBER</b>
+                          le temps    Volume Z2  Zone tampon
+                                     → A2       → A2</pre>
+    </div>
+
+    <div class="logic-card">
+      <h3>L'idée clé : un TSB négatif n'est pas un mauvais signe</h3>
+      <p><b>Forme (TSB) = Fitness (CTL) − Fatigue (ATL)</b>. Un TSB à −15 avec un CTL en croissance
+      signifie « j'absorbe une charge qui me rend plus fort ». Le moteur n'autorise l'intensité
+      <b>que</b> dans la fenêtre −10 à −25 :</p>
+      <table class="tbl">
+        <tr><th>TSB</th><th>Lecture</th><th>Conséquence</th></tr>
+        <tr><td><b class="badge blue">&gt; −10</b></td><td>Trop frais = charge insuffisante</td><td>Volume Z2 (A2/A3) — l'intensité serait gaspillée</td></tr>
+        <tr><td><b class="badge green">−10 à −25</b></td><td>Fenêtre de surcompensation</td><td>Intensité productive : B1–B3 / C1–C3 selon temps (+ PMA/Force si déverrouillées, voir ci-dessous)</td></tr>
+        <tr><td><b class="badge amber">−25 à −30</b></td><td>Zone tampon</td><td>Volume doux (A2), aucune intensité</td></tr>
+        <tr><td><b class="badge red">&lt; −30</b></td><td>Ligne rouge surcharge</td><td>Décharge obligatoire (A1/Repos)</td></tr>
+      </table>
+    </div>
+
+    <div class="logic-card">
+      <h3>Récapitulatif inputs → output</h3>
+      <table class="tbl">
+        <tr><th>VFC</th><th>TSB</th><th>Statut</th><th>Séance</th></tr>
+        <tr><td><b>VFC &lt; <span class="dyn-vfc-th">85 % de VFC 7j</span></b></td><td>quelconque</td><td class="badge red">🔴 Rouge nerveux</td><td><b>A1</b> ou Repos</td></tr>
+        <tr><td><b>VFC ≥ <span class="dyn-vfc-th">85 % de VFC 7j</span></b></td><td><b>&lt; −30</b></td><td class="badge red">🔴 Rouge physique</td><td><b>A1</b> ou Repos</td></tr>
+        <tr><td><b>VFC ≥ <span class="dyn-vfc-th">85 % de VFC 7j</span></b></td><td><b>−30 à −25</b></td><td class="badge amber">🟡 Ambre</td><td><b>A2</b> — prudence, volume doux</td></tr>
+        <tr><td><b>VFC ≥ <span class="dyn-vfc-th">85 % de VFC 7j</span></b></td><td><b>−25 à −10</b></td><td class="badge green">🟢 Vert</td><td><b>B ou C</b> selon temps (table ci-dessous)</td></tr>
+        <tr><td><b>VFC ≥ <span class="dyn-vfc-th">85 % de VFC 7j</span></b></td><td><b>&gt; −10</b></td><td class="badge blue">🔵 Bleu</td><td><b>A2</b> (A3 si ≥ 90 min ; A2 réduit à 45 min si &lt; 60 min)</td></tr>
+      </table>
+      <p style="margin-top:14px">Le temps disponible n'affine le choix <b>que dans le statut vert</b> :</p>
+      <table class="tbl">
+        <tr><th>Temps dispo</th><th>🟢 Vert → séance</th><th>Alternative</th></tr>
+        <tr><td>30 min</td><td><b>B1</b> Sub-Seuil Flash</td><td>C1</td></tr>
+        <tr><td>45 min</td><td><b>C1</b> Pyramide Vélocité</td><td>B1</td></tr>
+        <tr><td>60 min</td><td><b>B2</b> Sweetspot Classique</td><td>C2</td></tr>
+        <tr><td>90 min</td><td><b>B3</b> Over-Under Long</td><td>C3</td></tr>
+        <tr><td>120 min +</td><td><b>C3</b> Foncier + Vélocité</td><td>B3</td></tr>
+      </table>
+    </div>
+
+    <div class="logic-card">
+      <h3>Garde-fous PMA &amp; Force (familles D et E)</h3>
+      <p>Les séances à haut risque neuro-musculaire ne sont jamais accessibles par défaut :
+      elles sont <b>déverrouillées par l'évaluation du matin</b>, selon deux règles indépendantes.</p>
+      <table class="tbl">
+        <tr><th>Famille</th><th>Conditions d'accès</th><th>Message si verrouillée</th></tr>
+        <tr><td class="badge green"><b>D — PMA / VO₂ max</b></td><td>Déviation VFC <b>≥ 0 %</b> <span class="lc" style="font-size:.78rem">((VFC nuit − VFC 7j) / VFC 7j) × 100</span><br><b>ET</b> TSB ≥ −15</td><td>Séance PMA masquée : risque d'épuisement du système nerveux autonome.</td></tr>
+        <tr><td class="badge blue"><b>D3 — Pyramide PMA</b></td><td>En plus : <b>TSB &gt; −10</b> (fraîcheur maximale)</td><td>Réservé aux jours de fraîcheur maximale.</td></tr>
+        <tr><td><b>E — Force / SFR</b></td><td><b>TSB ≥ −20</b> (stabilisateurs du tronc frais)</td><td>Séance Force verrouillée : tronc fatigué.</td></tr>
+      </table>
+      <p style="margin-top:10px">Deux garde-fous structurels sur la famille E : <b>plafond de 20 min de travail
+      cumulé en sous-cadence par séance</b> (pression discale), et <b>gainage actif obligatoire</b> —
+      arrêt immédiat en cas de tension lombaire. E2 (20 min pile) et E3 (18 min) sont construits
+      pour respecter ce plafond.</p>
+      <p style="margin-top:6px">La disponibilité PMA/Force est affichée dans la carte résultat de l'arbre
+      de décision, et les cartes verrouillées restent visibles dans la bibliothèque (grisées, avec le motif).</p>
+      <p style="margin-top:14px"><b>Quand sont-elles recommandées ?</b> Accessible ≠ recommandé — le moteur ne
+      prescrit du haut risque que dans la fenêtre physiologique qui le justifie :</p>
+      <table class="tbl">
+        <tr><th>Statut du jour</th><th>Prescription</th></tr>
+        <tr><td class="badge blue">🔵 Frais + PMA déverrouillée</td><td><b>D en primaire</b> selon le temps (D1 à 30/45 min, D2 à 60 min, D3 à 90 min+) — E2 en alternative si Force déverrouillée</td></tr>
+        <tr><td class="badge blue">🔵 Frais + PMA verrouillée + Force déverrouillée</td><td><b>E3 en primaire si ≥ 90 min</b> (foncier long + SFR côte : du volume utile pour les pours, sans toucher au SNA) — sinon A2</td></tr>
+        <tr><td class="badge green">🟢 Vert + Force déverrouillée</td><td>B/C en primaire, <b>E2 en alternative</b> (intensité de substitution légitime, spécifique montagne)</td></tr>
+        <tr><td class="badge red">🔴 / 🟡</td><td><b>Jamais D ni E</b> — conforme aux garde-fous</td></tr>
+        <tr><td><b>E1 — Force Explosive</b></td><td><b>Jamais en reco automatique</b> : départ arrêté / grand plateau est le geste le plus à risque pour le dos — séance choisie consciemment, accessible seulement</td></tr>
+      </table>
+    </div>
+
+    <div class="logic-card">
+      <h3>Comment tester les 5 branches</h3>
+      <table class="tbl">
+        <tr><th>Branch</th><th>VFC</th><th>TSB</th><th>Résultat attendu</th></tr>
+        <tr><td class="badge red">🔴 Nerveux</td><td>65</td><td>0</td><td>RED → A1/Repos</td></tr>
+        <tr><td class="badge red">🔴 Physique</td><td>88</td><td>−35</td><td>RED → A1/Repos</td></tr>
+        <tr><td class="badge green">🟢 Vert</td><td>88</td><td>−15</td><td>GREEN → B2 (à 60 min)</td></tr>
+        <tr><td class="badge amber">🟡 Ambre</td><td>88</td><td>−27</td><td>AMBER → A2</td></tr>
+        <tr><td class="badge blue">🔵 Bleu</td><td>88</td><td>+9</td><td>BLUE → A2</td></tr>
+      </table>
+      <p style="margin-top:10px">💡 Piège classique : pour atteindre le vert, il faut un TSB <b>négatif</b>
+      (ex. <b>−15</b>) — un TSB positif vous mettra toujours en bleu (volume).</p>
+    </div>
+  </section>
+</div><!-- /view-logic -->
+
+<div class="view" id="view-zones">
+  <section id="zones">
+    <h2>Zones de puissance &amp; de fréquence cardiaque</h2>
+
+    <div class="logic-card">
+      <h3>Zones de puissance ( Garmin, % du FTP)</h3>
+      <p>Ajustez votre FTP pour recalculer les zones en watts :</p>
+      <div class="field" style="max-width:180px; margin-top:10px">
+        <label for="ftp-input">FTP (W)</label>
+        <input type="number" id="ftp-input" step="1" value="226" inputmode="numeric">
+      </div>
+      <table class="tbl" id="power-table" style="margin-top:12px">
+        <tr><th>Zone</th><th>Nom Garmin</th><th>% FTP</th><th>Puissance</th><th>Usage principal</th></tr>
+      </table>
+      <p style="margin-top:10px">⚠ Zones hautes (Z5–Z7) : coût neuro-musculaire et risque blessure élevés — à doser avec parcimonie
+      et uniquement sur des objectifs précis. Cadence élevée recommandée quelle que soit la zone.</p>
+      <p style="margin-top:6px">💡 Les séances de la bibliothèque sont calibrées sur votre FTP de référence.</p>
+    </div>
+
+    <div class="logic-card">
+      <h3>Zones FC — cyclisme ( Garmin, % de la FC max cyclisme)</h3>
+      <p>La <b>FC max est généralement plus basse à vélo qu'en course à pied</b> (souvent 5 à 10 bpm de moins) :
+      l'utilisation d'un profil de zones spécifique au cyclisme est donc indispensable. Ajustez votre FC max cyclisme :</p>
+      <div class="field" style="max-width:180px; margin-top:10px">
+        <label for="hrmax-bike">FC max cyclisme (bpm)</label>
+        <input type="number" id="hrmax-bike" step="1" value="191" inputmode="numeric">
+      </div>
+      <table class="tbl" id="hr-table-bike" style="margin-top:12px">
+        <tr><th>Zone</th><th>Nom Garmin</th><th>% FC max cyclisme</th><th>Fréquence cardiaque</th></tr>
+      </table>
+      <p style="margin-top:10px">💡 Les séances de la bibliothèque sont pilotées en puissance et cadence — la FC n'y est qu'un contrôle :
+      une dérive cardiaque à puissance égale signale fatigue ou déshydratation. Pour une FC max fiable, préférer un test de terrain à la formule 220 − âge.</p>
+    </div>
+
+    <div class="logic-card">
+      <h3>Zones FC — standard ( Garmin, % de la FC max)</h3>
+      <p>Profil générique, applicable à la course à pied et aux activités d'endurance générales.
+      Ajustez votre FC max pour recalculer les zones en bpm :</p>
+      <div class="field" style="max-width:180px; margin-top:10px">
+        <label for="hrmax">FC max (bpm)</label>
+        <input type="number" id="hrmax" step="1" value="196" inputmode="numeric">
+      </div>
+      <table class="tbl" id="hr-table" style="margin-top:12px">
+        <tr><th>Zone</th><th>Nom Garmin</th><th>% FC max</th><th>Fréquence cardiaque</th></tr>
+      </table>
+    </div>
+  </section>
+</div><!-- /view-zones -->
+
+<div class="view" id="view-profile">
+  <section id="profile">
+    <h2>User Profile — paramètres physiologiques</h2>
+    <div class="profile-grid" id="profile-grid"></div>
+    <div class="logic-card" style="margin-top:16px">
+      <h3>Objectif de saison</h3>
+      <div class="field" style="max-width:none">
+        <label for="profile-goal">Objectif (texte libre — alimente l'orientation du coaching)</label>
+        <input type="text" id="profile-goal" maxlength="120" placeholder="Get fit. Build volume. Layer intensity.">
+      </div>
+      <p style="margin-top:10px">Décrivez votre objectif avec vos propres mots : événement cible, horizon, contraintes.
+      Ça pourrait aider à orienter le coaching.</p>
+    </div>
+  </section>
+</div><!-- /view-profile -->
+
+<div class="view" id="view-glossary">
+  <section id="glossary">
+    <h2>Glossaire — termes et acronymes</h2>
+    <div class="logic-card">
+      <p id="gl-atl"><b>ATL — Fatigue</b> — <i>Acute Training Load</i> : le même calcul, mais sur une fenêtre
+      <b>courte (7 jours)</b>. C'est la fatigue récente : elle monte vite après des séances dures
+      et retombe vite au repos. C'est elle qui fait mal aux jambes.</p>
+      <p style="margin-top:10px" id="gl-ctl"><b>CTL — Fitness</b> — <i>Chronic Training Load</i> : moyenne pondérée exponentiellement
+      de votre charge d'entraînement quotidienne sur une fenêtre <b>longue (42 jours)</b>. C'est votre
+      « fitness » accumulé : il monte lentement et redescend lentement. Un CTL en croissance régulière
+      est le but du jeu ; les bonds bruts sont contre-productifs.</p>
+      <p style="margin-top:10px" id="gl-hrmax"><b>FC Max</b> — <i>Fréquence cardiaque maximale</i> : le plafond que votre cœur
+      peut atteindre lors d'un effort maximal. À mesurer par un test de terrain (côte ou piste, montée progressive)
+      plutôt que par la formule 220 − âge, trop imprécise. Base des zones FC standard. <b>À vélo, la FC max est
+      généralement 5 à 10 bpm plus basse</b> qu'en course à pied (position, masse musculaire engagée) — d'où le
+      paramètre séparé « FC max cyclisme ».</p>
+      <p style="margin-top:10px" id="gl-rhr"><b>FC Repos</b> — <i>Fréquence cardiaque au repos</i> : mesurée au réveil,
+      avant de se lever, dans des conditions identiques. Un cœur entraîné bat lentement au repos (volume d'éjection
+      élevé). Ce qui compte est la <b>tendance</b> : une dérive à la hausse sur plusieurs jours signale une
+      récupération incomplète (sommeil, stress, surcharge) — c'est le complément à long terme de la VFC.</p>
+      <p style="margin-top:10px" id="gl-ftp"><b>FTP</b> — <i>Functional Threshold Power</i> : la puissance maximale que vous pouvez tenir
+      pendant environ une heure. La référence à partir de laquelle toutes les zones de puissance
+      et tous les calculs de charge (TSS) sont établis.</p>
+      <p style="margin-top:10px" id="gl-weight"><b>Poids</b> — l'autre moitié du calcul de la puissance relative :
+      <b>W/kg = FTP ÷ Poids</b>. C'est la métrique qui compte réellement en montagne (Marmotte, Étape du Tour) :
+      à FTP égal, chaque kilo de moins se transforme directement en vitesse de grimpe.</p>
+      <p style="margin-top:10px" id="gl-rmssd"><b>rMSSD</b> — <i>root Mean Square of Successive Differences</i> : la racine carrée de la moyenne des carrés
+      des différences entre intervalles R-R successifs. C'est la mesure de la VFC la plus sélective du système
+      <b>parasympathique</b> — la branche « frein / récupération » — d'où son choix par Garmin, Whoop ou HRV4Training.
+      À mesurer chaque matin au lever, dans des conditions identiques : ce qui compte est
+      <b>l'écart à votre baseline personnelle</b>, pas la valeur absolue.</p>
+      <p style="margin-top:10px" id="gl-tsb"><b>TSB — Forme</b> — <i>Training Stress Balance</i> : <b>Fitness (CTL) − Fatigue (ATL)</b>.
+      La différence entre ce que votre corps a accumulé comme capacité et ce qu'il vient de subir comme charge.
+      Un TSB négatif modéré n'est pas un mauvais signe : il indique que vous absorbez une charge de construction.
+      Un TSB positif signifie « frais », pas « en progression ».</p>
+      <p style="margin-top:10px" id="gl-tss"><b>TSS</b> — <i>Training Stress Score</i> : la charge d'une seule séance.
+      Repère : une heure au seuil (FTP) = <b>100 TSS</b>. C'est l'unité qui alimente CTL et ATL
+      (la charge quotidienne en TSS est l'ingrédient des deux moyennes).</p>
+      <p style="margin-top:10px" id="gl-vfc"><b>VFC</b> — <i>Variabilité de la Fréquence Cardiaque</i> (<i>HRV</i>) : la variation naturelle
+      des intervalles entre battements cardiaques. Reflet de l'équilibre du système nerveux autonome.
+      Sur Garmin Connect et dans ce dashboard, la valeur affichée est le <b>rMSSD</b> : dans ce contexte,
+      <b>VFC et rMSSD sont synonymes</b>.</p>
+      <p style="margin-top:10px" id="gl-vo2"><b>VO₂ max</b> — volume maximal d'oxygène consommé par minute et par kilo :
+      la capacité aérobie maximale, c'est-à-dire le plafond de performance. Estimée par Garmin (Firstbeat) au fil des
+      sorties avec FC, ou mesurée en laboratoire. Elle progresse lentement avec l'entraînement en endurance (Z2).</p>
+      <p style="margin-top:10px"><b>Unités</b> — <b>W</b> : watts (puissance) ·
+      <b>bpm</b> : battements par minute (fréquence cardiaque) · <b>rpm</b> : tours de pédale par minute (cadence) ·
+      <b>ms</b> : millisecondes (VFC).</p>
+    </div>
+    </div>
+  </section>
+</div><!-- /view-glossary -->
+</main>
+
+<footer style="max-width:1100px; margin:40px auto 0; padding:0 16px 20px; text-align:center; font-size:.75rem; color:var(--text-dim)">
+  HomeTrainer HQ · <a href="LICENSE" style="color:var(--text-dim); text-decoration:underline dotted" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">MIT License</a> · © 2026 bjrbhre
+</footer>
+
+<div id="toast">Copié</div>
+
+<div id="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<script>
+"use strict";
+
+/* =============== Data: single source of truth =============== */
+
+const FTP_REF = { ftp: 226, weight: 75.5, hrv: 89, rhr: 41, hrmax: 196, hrmaxBike: 191, vo2: 51.5 }; // valeurs par défaut
+const PARAMS = { ...FTP_REF };
+let GOAL = "Get fit. Build volume. Layer intensity.";
+
+function renderHeader() {
+  document.getElementById("goal-text").textContent = "Objectif : " + (GOAL || "—") ;
+  const goalInput = document.getElementById("goal-input");
+  if (document.activeElement !== goalInput) goalInput.value = GOAL;
+  document.getElementById("v-ftp").textContent = PARAMS.ftp + " W";
+  document.getElementById("v-hrv").textContent = PARAMS.hrv + " ms";
+  const kpi = document.getElementById("kpi-hrv-baseline");
+  if (kpi) kpi.textContent = PARAMS.hrv + " ms";
+  const zonesRhr = document.getElementById("zones-rhr");
+  if (zonesRhr) zonesRhr.textContent = PARAMS.rhr + " bpm";
+  const thTxt = "85 % de VFC 7j (" + Math.round(PARAMS.hrv * 0.85) + " ms)";
+  document.querySelectorAll(".dyn-vfc-th").forEach(el => el.textContent = thTxt);
+  for (const k of Object.keys(PARAMS)) {
+    const chip = document.getElementById("chip-" + k);
+    if (chip && document.activeElement !== chip) chip.value = PARAMS[k];
+    const prof = document.getElementById("profile-" + k);
+    if (prof && document.activeElement !== prof) prof.value = PARAMS[k];
+  }
+}
+
+function setParam(key, value) {
+  const v = Number(value);
+  if (!Number.isFinite(v) || v <= 0) return;
+  PARAMS[key] = v;
+  saveState();
+  renderHeader();
+  if (key === "ftp") { renderPowerZones(); renderPolarBar(); renderMatrix(); }
+  if (key === "hrmax" || key === "hrmaxBike") renderHrZones();
+}
+
+/* =============== Persistance (localStorage) =============== */
+const STORE_KEY = "hometrainer-hq:v1";
+
+function saveState() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({ params: PARAMS, goal: GOAL })); }
+  catch (e) { /* mode privé / quota : silencieux */ }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.goal) GOAL = data.goal;
+    for (const k of Object.keys(FTP_REF)) {
+      const v = Number(data.params && data.params[k]);
+      if (Number.isFinite(v) && v > 0) PARAMS[k] = v;
+    }
+  } catch (e) { /* JSON corrompu : on garde les défauts */ }
+}
+
+function resetState() {
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  Object.assign(PARAMS, FTP_REF);
+  GOAL = "Get fit. Build volume. Layer intensity.";
+  renderHeader(); renderPowerZones(); renderHrZones(); renderPolarBar();
+  showToast("Paramètres réinitialisés");
+}
+
+// objectif de saison (texte libre — futur input d'analyse/coaching NL)
+document.getElementById("goal-input").addEventListener("input", (e) => {
+  GOAL = e.target.value.trim();
+  document.getElementById("goal-text").textContent = "Objectif : " + (GOAL || "—");
+  saveState();
+});
+
+// chips du header : édition directe
+for (const k of Object.keys(PARAMS)) {
+  const chip = document.getElementById("chip-" + k);
+  if (chip) chip.addEventListener("input", (e) => setParam(k, e.target.value));
+  const prof = document.getElementById("profile-" + k);
+  if (prof) prof.addEventListener("input", (e) => setParam(k, e.target.value));
+}
+// bouton édition du header
+document.getElementById("edit-params").addEventListener("click", () => {
+  const h = document.querySelector("header");
+  const editing = h.classList.toggle("editing");
+  document.getElementById("edit-params").textContent = editing ? "✓" : "✎";
+  document.getElementById("edit-params").title = editing ? "Valider" : "Modifier les paramètres";
+});
+document.getElementById("reset-params").addEventListener("click", resetState);
+
+const FAMILY = {
+  A: { label: "Base / Volume", cls: "a" },
+  B: { label: "Intensité",      cls: "b" },
+  C: { label: "Vélocité",       cls: "c" },
+  D: { label: "PMA — VO₂ max",  cls: "d" },
+  E: { label: "Force / SFR",    cls: "e" }
+};
+
+// segments: [minutes, puissance en % du FTP] — utilisés par les mini-charts ET la modal
+const WORKOUTS = [
+  { code:"A1", family:"A", title:"Décrassage Z1", dur:"45 min", durMin:45, watts:"< 117 W", cad:"95+ rpm",
+    tss:"~25", intensityFactor:0.55, spine:"ok", spineNote:"Cadence haute = décompression lombaire",
+    specs:"45 min Z1 recovery, < 117 W, Cadence > 95 rpm, quiet road",
+    segments:[[45,0.50]] },
+  { code:"A2", family:"A", title:"Endurance Z2", dur:"60–75 min", durMin:45, watts:"118–161 W", cad:"90 rpm",
+    tss:"~45–60", intensityFactor:0.62, spine:"ok", spineNote:"Position fréquente modifiée (15/5)",
+    specs:"60-75 min Z2 endurance, 118-161 W, Cadence > 90 rpm",
+    segments:[[60,0.65]] },
+  { code:"A3", family:"A", title:"Foncier Long Z2", dur:"120–210 min", durMin:120, watts:"118–161 W", cad:"85–90 rpm",
+    tss:"~110–180", intensityFactor:0.62, spine:"watch", spineNote:"Long : sortir du vélo 2 min toutes les 45 min",
+    specs:"120-210 min Z2 long endurance, 118-161 W, Cadence > 85 rpm",
+    segments:[[120,0.65]] },
+  { code:"B1", family:"B", title:"Sub-Seuil Flash", dur:"35 min", durMin:35, watts:"3×6 min @ 195 W", cad:"90 rpm",
+    tss:"~40", intensityFactor:0.75, spine:"ok", spineNote:"Intensité OK si cadence tenue",
+    specs:"3x6min @ 195 W (rec 3 min Z1), Cadence > 90 rpm, total 35 min",
+    segments:[[10,0.40],[6,0.90],[3,0.40],[6,0.90],[3,0.40],[6,0.90],[2,0.40]] },
+  { code:"B2", family:"B", title:"Sweetspot Classique", dur:"60 min", durMin:60, watts:"3×10 min @ 190 W", cad:"90 rpm",
+    tss:"~65", intensityFactor:0.78, spine:"ok", spineNote:"Sweetspot = meilleur ratio stimulus/fatigue",
+    specs:"3x10min @ 190 W (rec 5 min Z2), Cadence > 90 rpm, total 60 min",
+    segments:[[10,0.40],[10,0.875],[5,0.40],[10,0.875],[5,0.40],[10,0.875],[10,0.40]] },
+  { code:"B3", family:"B", title:"Over-Under Long", dur:"90 min", durMin:90, watts:"4×12 min @ 185–205 W", cad:"90–95 rpm",
+    tss:"~95", intensityFactor:0.8, spine:"watch", spineNote:"Cadence haute obligatoire sur les surcouples",
+    specs:"4x12min alternating 3min @ 185 W / 3min @ 205 W (rec 4 min Z2), Cadence > 90 rpm, total 90 min",
+    segments:[[10,0.40],[12,0.85],[4,0.40],[12,0.85],[4,0.40],[12,0.85],[4,0.40],[12,0.945],[10,0.40]] },
+  { code:"C1", family:"C", title:"Pyramide Vélocité", dur:"40 min", durMin:40, watts:"140–165 W", cad:"100–110 rpm",
+    tss:"~35", intensityFactor:0.6, spine:"ok", spineNote:"Vélocité = pression discale minimale",
+    specs:"Pyramid 4x(2-3-4-3-2 min @ 140-165 W), Cadence 100-110 rpm, total 40 min",
+    segments:[[5,0.30],[2,0.64],[3,0.69],[4,0.76],[3,0.69],[2,0.64],[5,0.30]] },
+  { code:"C2", family:"C", title:"Variations Cadence", dur:"60 min", durMin:60, watts:"150 W", cad:"Alt 85 / 105 rpm",
+    tss:"~50", intensityFactor:0.63, spine:"watch", spineNote:"Jamais sous 85 rpm — verrou sécurité",
+    specs:"6x(3 min @ 105 rpm / 3 min @ 85 rpm) @ 150 W, total 60 min",
+    segments:[[5,0.35],[3,0.75],[3,0.63],[3,0.75],[3,0.63],[3,0.75],[3,0.63],[3,0.75],[3,0.63],[3,0.75],[3,0.63],[3,0.75],[3,0.63],[3,0.75],[7,0.35]] },
+  { code:"C3", family:"C", title:"Foncier + Vélocité", dur:"120 min", durMin:120, watts:"120–161 W + spurt", cad:"90–100 rpm",
+    tss:"~100", intensityFactor:0.66, spine:"watch", spineNote:"Spurts sur plat uniquement, cadence ≥ 95",
+    specs:"100 min Z2 120-161 W + 6x1 min @ 200 W (rec 4 min Z2), Cadence > 90 rpm, total 120 min",
+    segments:[[10,0.40],[30,0.65],[1,0.92],[4,0.65],[1,0.92],[4,0.65],[1,0.92],[4,0.65],[1,0.92],[4,0.65],[1,0.92],[4,0.65],[1,0.92],[4,0.65],[1,0.92],[4,0.65],[1,0.92],[40,0.65]] },
+  { code:"D1", family:"D", title:"Micro-Intervals PMA", dur:"35 min", durMin:35, cad:"100+ rpm",
+    tss:"~45", intensityFactor:0.82, spine:"watch", spineNote:"Cadence élevée obligatoire pour soulager la colonne",
+    wattsFn: ftp => `2 sets de 8 × (30 s @ ${Math.round(ftp*1.15)} W / 30 s Z1)`,
+    specsFn: ftp => `2 sets de 8x(30s @ ${Math.round(ftp*1.15)} W / 30s Z1), Cadence > 100 rpm, total 35 min`,
+    segments:[[8,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[3,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[0.5,1.15],[0.5,0.35],[7,0.35]] },
+  { code:"D2", family:"D", title:"Intervalles Courts PMA", dur:"55 min", durMin:55, cad:"95+ rpm",
+    tss:"~70", intensityFactor:0.82, spine:"watch", spineNote:"Arrêter si la dérive cardiaque est excessive",
+    wattsFn: ftp => `5 × 3 min @ ${Math.round(ftp*1.08)}–${Math.round(ftp*1.12)} W (récup 3 min)`,
+    specsFn: ftp => `5x3min @ ${Math.round(ftp*1.08)}-${Math.round(ftp*1.12)} W (rec 3 min Z1), Cadence > 95 rpm, total 55 min`,
+    segments:[[10,0.30],[3,1.10],[3,0.35],[3,1.10],[3,0.35],[3,1.10],[3,0.35],[3,1.10],[3,0.35],[3,1.10],[3,0.35],[15,0.30]] },
+  { code:"D3", family:"D", title:"Pyramide PMA", dur:"1 h 15", durMin:75, cad:"95–100 rpm",
+    tss:"~85", intensityFactor:0.85, spine:"watch", spineNote:"Réservé aux jours de fraîcheur maximale",
+    wattsFn: ftp => `2 × (1-2-3-2-1 min) @ ${Math.round(ftp*1.10)} W`,
+    specsFn: ftp => `2x(1-2-3-2-1 min) @ ${Math.round(ftp*1.10)} W (rec 4 min Z1), Cadence 95-100 rpm, total 75 min`,
+    segments:[[15,0.35],[1,1.10],[2,1.10],[3,1.10],[2,1.10],[1,1.10],[4,0.35],[1,1.10],[2,1.10],[3,1.10],[2,1.10],[1,1.10],[20,0.35]] },
+  { code:"E1", family:"E", title:"Force Explosive", dur:"40 min", durMin:40, cad:"Max torque",
+    tss:"~45", intensityFactor:0.7, spine:"watch", spineNote:"Assis uniquement. Interdiction de se déhancher",
+    wattsFn: () => "6 × 20 s départ arrêté / grand plateau (max torque)",
+    specsFn: () => "6x20s départ arrêté grand plateau (rec 3 min Z1), Assis uniquement, total 40 min",
+    segments:[[15,0.30],[0.3,1.50],[3.4,0.30],[0.3,1.50],[3.4,0.30],[0.3,1.50],[3.4,0.30],[0.3,1.50],[3.4,0.30],[0.3,1.50],[3.4,0.30],[0.3,1.50],[3.4,0.30],[3,0.30]] },
+  { code:"E2", family:"E", title:"SFR Classique", dur:"1 h 00", durMin:60, cad:"60–65 rpm",
+    tss:"~60", intensityFactor:0.72, spine:"watch", spineNote:"Gainage actif — 20 min de sous-cadence (plafond atteint)",
+    wattsFn: ftp => `4 × 5 min @ ${Math.round(ftp*0.85)} W (récup 5 min)`,
+    specsFn: ftp => `4x5min @ ${Math.round(ftp*0.85)} W (rec 5 min Z1), Cadence 60-65 rpm, gainage actif, total 60 min`,
+    segments:[[15,0.30],[5,0.85],[5,0.30],[5,0.85],[5,0.30],[5,0.85],[5,0.30],[5,0.85],[5,0.30],[5,0.30]] },
+  { code:"E3", family:"E", title:"Foncier + SFR Côte", dur:"2 h 00", durMin:120, cad:"65 rpm (côtes)",
+    tss:"~120", intensityFactor:0.68, spine:"watch", spineNote:"Stopper la sous-cadence après 1 h 30 de sortie",
+    wattsFn: ftp => `Z2 + 3 × 6 min en côte @ ${Math.round(ftp*0.88)} W`,
+    specsFn: ftp => `100 min Z2 + 3x6min côte @ ${Math.round(ftp*0.88)} W, Cadence 65 rpm en côte (18 min sous-cadence max), total 120 min`,
+    segments:[[40,0.65],[6,0.88],[6,0.65],[6,0.88],[6,0.65],[6,0.88],[50,0.65]] }
+];
+
+const byCode = Object.fromEntries(WORKOUTS.map(w => [w.code, w]));
+
+const DESC = {
+  A1: "Sortie très douce pour relancer les jambes et favoriser la récupération. Aucune contrainte physiologique ni mécanique.",
+  A2: "Le pain quotidien de l'entraînement : construit la base aérobie (mitochondries, capillaires) sans fatigue notable.",
+  A3: "Longue sortie en endurance : renforce le moteur aérobie et l'endurance musculaire — le pilier des objectifs longue distance.",
+  B1: "Trois incursions courtes mais nettes au seuil : stimulus efficace, fatigue maîtrisée, format compatible avec un créneau serré.",
+  B2: "Le classique sweetspot : juste sous le seuil, c'est le meilleur rapport stimulus/fatigue pour faire progresser la puissance au seuil.",
+  B3: "Over-under : alterner juste sous et juste au-dessus du seuil pour habituer l'organisme à recycler l'acide lactique — un cran au-dessus du B2.",
+  C1: "Travail de vélocité en pyramide : fluidité et efficacité de pédalage à haute cadence, à puissance faible.",
+  C2: "Alternances de cadence à puissance constante : économie de mouvement et coordination neuromusculaire.",
+  C3: "Sortie d'endurance ponctuée d'accélérations courtes : entretien de la vélocité sur du volume.",
+  D1: "Micro-intervals à PMA : beaucoup de temps à haute intensité grâce aux récupérations courtes — le stimulus VO\u2082 max le plus efficace par minute.",
+  D2: "Intervalles longs à PMA : le stimulus VO\u2082 max classique. À encaisser uniquement les jours où le système nerveux est au top.",
+  D3: "Pyramide complète à PMA : le gros travail VO\u2082 max. Réservé aux jours de fraîcheur maximale.",
+  E1: "Départs arrêtés en grand plateau : recrutement neuromusculaire maximal et puissance instantanée. Séance courte mais très exigeante mécaniquement.",
+  E2: "Force-endurance en sous-cadence : simule la grimpe à gros braquets sans montagne. Attention à la charge lombaire.",
+  E3: "Longue sortie avec répétitions en côte en sous-cadence : la séance la plus spécifique pour les cols raides de haute montagne."
+};
+
+function zoneOf(pct) {
+  if (pct < 0.55) return "Z1 · Active Recovery";
+  if (pct < 0.75) return "Z2 · Endurance";
+  if (pct < 0.90) return "Z3 · Tempo";
+  if (pct <= 1.05) return "Z4 · Threshold";
+  if (pct <= 1.19) return "Z5 · VO\u2082 Max";
+  if (pct <= 1.50) return "Z6 · Anaerobic";
+  return "Z7 · Neuromuscular";
+}
+
+function zoneColor(pct) {
+  return pct < 0.55 ? "var(--z1)" : pct < 0.75 ? "var(--z2)" : pct < 0.90 ? "var(--z3)" : pct <= 1.05 ? "var(--z4)" : "var(--z5)";
+}
+
+function structureRows(w) {
+  const rows = [];
+  for (const [min, pct] of w.segments) {
+    const last = rows[rows.length - 1];
+    if (last && Math.abs(last.pct - pct) < 0.005) last.min += min;
+    else rows.push({ min, pct });
+  }
+  return rows.map((r, i) => {
+    const watts = Math.round(PARAMS.ftp * r.pct);
+    const dur = r.min >= 1 ? `${Math.round(r.min)} min` : `${Math.round(r.min * 60)} s`;
+    return `<tr><td>${i + 1}</td><td><b>${dur}</b></td>` +
+           `<td><b>${Math.round(r.pct * 100)} % FTP</b> <span style="color:var(--text-dim)">(~${watts} W)</span></td>` +
+           `<td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${zoneColor(r.pct)};margin-right:5px"></span>${zoneOf(r.pct)}</td></tr>`;
+  }).join("");
+}
+
+function openModal(code) {
+  const w = byCode[code];
+  const card = document.getElementById("card-" + code);
+  const locked = card ? card.classList.contains("locked") : false;
+  const lockmsg = card ? card.querySelector(".lockmsg").textContent : "";
+  const watts = w.wattsFn ? w.wattsFn(PARAMS.ftp) : w.watts;
+  const specs = w.specsFn ? w.specsFn(PARAMS.ftp) : w.specs;
+  document.getElementById("modal-body").innerHTML = `
+    <div class="modal-head">
+      <span class="code" style="font-size:2rem;font-weight:800">${w.code}</span>
+      <div>
+        <h3 style="font-size:1.3rem">${w.title}</h3>
+        <span class="fam ${FAMILY[w.family].cls}">${FAMILY[w.family].label}</span>
+      </div>
+      <button type="button" class="modal-close" id="modal-close" title="Fermer">✕</button>
+    </div>
+    ${locked ? `<p class="lockmsg" style="display:block">${lockmsg}</p>` : ""}
+    <p style="color:var(--text-dim); margin:12px 0">${DESC[code]}</p>
+    ${chartSVG(w, true)}
+    <div class="modal-targets">
+      <div><span>Durée</span><b>${w.dur}</b></div>
+      <div><span>Puissance</span><b>${watts}</b></div>
+      <div><span>Cadence</span><b>${w.cad}</b></div>
+      <div><span>TSS cible</span><b>${w.tss}</b></div>
+    </div>
+    <h4 style="margin:18px 0 8px">Structure de la séance</h4>
+    <table class="tbl">
+      <tr><th>#</th><th>Durée</th><th>Puissance</th><th>Zone</th></tr>
+      ${structureRows(w)}
+    </table>
+    <p class="spine ${w.spine}" style="margin-top:14px">${w.spine === "ok" ? "✔" : "⚠"} ${w.spineNote}</p>
+  `;
+  document.getElementById("modal-overlay").classList.add("open");
+  document.getElementById("modal-close").addEventListener("click", closeModal);
+}
+
+function closeModal() {
+  document.getElementById("modal-overlay").classList.remove("open");
+}
+
+
+/* =============== Mini-chart SVG =============== */
+
+function chartSVG(w, big = false) {
+  const H = big ? 100 : 64, PAD = 4, MAX = 1.6; // échelle puissance : 0 → 160 % FTP
+  const total = w.segments.reduce((s, [m]) => s + m, 0);
+  const scale = (100 - PAD * 2) / total;
+  let x = PAD, bars = "";
+  for (const [min, pct] of w.segments) {
+    const bw = Math.max(min * scale - 0.6, 0.6);
+    const bh = Math.max(Math.min(pct, MAX) / MAX * (H - PAD * 2 - (big ? 10 : 6)), 1.5);
+    const y = H - PAD - (big ? 8 : 3) - bh;
+    const color = pct < 0.55 ? "var(--z1)" : pct < 0.75 ? "var(--z2)" : pct < 0.90 ? "var(--z3)" : pct < 1.05 ? "var(--z4)" : "var(--z5)";
+    bars += `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${bw.toFixed(2)}" height="${bh.toFixed(2)}" rx="0.8" fill="${color}" opacity="0.9"/>`;
+    x += min * scale;
+  }
+  const ftpY = H - PAD - (big ? 8 : 3) - (1 / MAX) * (H - PAD * 2 - (big ? 10 : 6));
+  let ticks = "";
+  if (big) {
+    const step = total > 90 ? 30 : total > 40 ? 15 : 10;
+    for (let m = 0; m <= total; m += step) {
+      const tx = PAD + m * scale;
+      ticks += `<line x1="${tx.toFixed(2)}" y1="${ftpY.toFixed(2)}" x2="${tx.toFixed(2)}" y2="${H - PAD - 8}" stroke="var(--border)" stroke-width="0.25"/>` +
+               `<text x="${tx.toFixed(2)}" y="${H - 1}" font-size="2.6" fill="var(--text-dim)" text-anchor="middle">${m}′</text>`;
+    }
+  }
+  const ftpLabel = big ? `<text x="99" y="${(ftpY - 0.8).toFixed(2)}" font-size="2.6" fill="var(--red)" text-anchor="end">FTP ${PARAMS.ftp} W</text>` : "";
+  return `<svg class="chart${big ? " big" : ""}" viewBox="0 0 100 ${H}" preserveAspectRatio="none" role="img" aria-label="Profil ${w.code}">
+    <line x1="0" y1="${ftpY.toFixed(2)}" x2="100" y2="${ftpY.toFixed(2)}" stroke="var(--red)" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.55"/>
+    ${bars}${ticks}${ftpLabel}
+  </svg>`;
+}
+
+/* =============== Matrix render =============== */
+
+function renderMatrix() {
+  const root = document.getElementById("matrix");
+  root.innerHTML = WORKOUTS.map(w => {
+    const watts = w.wattsFn ? w.wattsFn(PARAMS.ftp) : w.watts;
+    const specs = w.specsFn ? w.specsFn(PARAMS.ftp) : w.specs;
+    const tag = w.code.startsWith("D") ? "PMA — Lock VFC" : w.code.startsWith("E") ? "Force — Guardrail lombaire" : null;
+    return `
+    <article class="workout" id="card-${w.code}" data-specs="${specs.replace(/"/g, "&quot;")}">
+      <span class="hl-badge"></span>
+      <div class="head">
+        <span class="code">${w.code}</span>
+        <span class="fam ${FAMILY[w.family].cls}">${FAMILY[w.family].label}</span>
+      </div>
+      <h3>${w.title}</h3>
+      ${chartSVG(w)}
+      <div class="meta">
+        <div><span>Durée</span><b>${w.dur}</b></div>
+        <div><span>Puissance</span><b>${watts}</b></div>
+        <div><span>Cadence</span><b>${w.cad}</b></div>
+        <div><span>TSS cible</span><b>${w.tss}</b></div>
+      </div>
+      ${tag ? `<p class="locktag">🔒 ${tag}</p>` : ""}
+      <p class="spine ${w.spine}">${w.spine === "ok" ? "✔" : "⚠"} ${w.spineNote}</p>
+      <p class="lockmsg" data-lockmsg="${w.code}"></p>
+    </article>`;
+  }).join("");
+  root.addEventListener("click", (e) => {
+    const cardEl = e.target.closest(".workout");
+    if (cardEl && !e.target.closest("a, button")) openModal(cardEl.id.replace("card-", ""));
+  });
+  linkifyTerms(root);
+  updateLocks();
+}
+
+// fermeture modal : backdrop + Échap
+document.getElementById("modal-overlay").addEventListener("click", (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeModal();
+});
+
+/* =============== Verrous D/E (PRD-001) =============== */
+let lastEval = null; // { rmssd, tsb, dev, pmaUnlock, forceUnlock } après évaluation
+
+function computeLocks() {
+  if (!lastEval) return null;
+  const { rmssd, tsb } = lastEval;
+  const dev = ((rmssd - PARAMS.hrv) / PARAMS.hrv) * 100;
+  return {
+    dev,
+    pmaUnlock: dev >= 0 && tsb >= -15,
+    forceUnlock: tsb >= -20,
+    tsb
+  };
+}
+
+function updateLocks() {
+  const locks = computeLocks();
+  const time = Number(document.getElementById("time").value);
+  const reco = lastEval ? lastEval.code : null;
+  const alts = (lastEval && lastEval.alts) || [];
+  for (const w of WORKOUTS) {
+    const card = document.getElementById("card-" + w.code);
+    if (!card) continue;
+    const msg = card.querySelector(".lockmsg");
+    const badge = card.querySelector(".hl-badge");
+    let locked = false, text = "";
+    if (w.code.startsWith("D") || w.code.startsWith("E")) {
+      if (!locks) {
+        locked = true;
+        text = "🔒 Évaluez votre état du matin (Playbook : Choix de l'entraînement) pour déverrouiller.";
+      } else if (w.code.startsWith("D")) {
+        locked = !locks.pmaUnlock || (w.code === "D3" && locks.tsb <= -10);
+        text = locked
+          ? (w.code === "D3" && locks.tsb <= -10 && locks.pmaUnlock
+            ? "🔒 Réservé aux jours de fraîcheur maximale (TSB > −10)."
+            : "🔒 Séance PMA masquée : déviation VFC négative ou TSB trop bas — risque d'épuisement du SNA.")
+          : "";
+      } else { // E
+        locked = !locks.forceUnlock;
+        text = locked
+          ? "🔒 Séance Force verrouillée : TSB < −20 — muscles stabilisateurs du tronc fatigués."
+          : "⚠ Séance Force déverrouillée : garder un gainage abdominal actif et couper immédiatement l'effort en cas de tension dans le bas du dos.";
+      }
+    }
+    // verrou temporel (jamais sur la reco ni les alternatives)
+    if (!locked && !(w.code === reco || alts.includes(w.code)) && w.durMin > time + 10) {
+      locked = true;
+      text = `⏱ Ne rentre pas dans ${time} min disponibles (durée mini : ${w.durMin} min).`;
+    }
+    card.classList.toggle("locked", locked);
+    if (text) msg.textContent = text; else msg.textContent = "";
+    // highlight reco / alternatives
+    card.classList.toggle("recommended", !locked && w.code === reco);
+    card.classList.toggle("alt", !locked && w.code !== reco && alts.includes(w.code));
+    badge.textContent = !locked && w.code === reco ? "★ Recommandée"
+      : !locked && alts.includes(w.code) ? "Alternative" : "";
+  }
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+/* =============== Decision engine =============== */
+
+const GREEN_TIME = { 30: "B1", 45: "C1", 60: "B2", 90: "B3", 120: "C3" };
+const GREEN_ALTS = {
+  30: ["B1", "C1"], 45: ["C1", "B1"], 60: ["B2", "C2"], 90: ["B3", "C3"], 120: ["C3", "B3"]
+};
+
+function decide(rmssd, tsb, time) {
+  const dev = ((rmssd - PARAMS.hrv) / PARAMS.hrv) * 100;
+  const pmaUnlock = dev >= 0 && tsb >= -15;
+  const forceUnlock = tsb >= -20;
+  lastEval = { rmssd, tsb, dev, pmaUnlock, forceUnlock };
+  const th = Math.round(PARAMS.hrv * 0.85); // seuil nerveux : 85 % de la VFC 7j
+  if (rmssd < th) {
+    lastEval.th = th;
+    return {
+      status: "red", label: "🔴 RED — Stress nerveux",
+      code: time >= 60 ? "A1" : "A1",
+      msg: `VFC effondrée (seuil : ${Math.round(PARAMS.hrv * 0.85)} ms) : le système nerveux ne digère pas la charge. Aucune intensité aujourd'hui.`,
+      alts: time >= 45 ? ["A1", "REPOS"] : ["REPOS"],
+      safety: "Si la valeur persiste 2 jours, prendre un repos complet et vérifier sommeil/hydratation."
+    };
+  }
+  if (tsb < -30) {
+    return {
+      status: "red", label: "🔴 RED — Surcharge physique",
+      code: "A1",
+      msg: "TSB sous la ligne rouge (−30) : fatigue cumulée trop profonde. Décharge obligatoire.",
+      alts: ["A1", "REPOS"],
+      safety: "Objectif : ramener le TSB au-dessus de −25 dans les 3–5 jours (volume divisé par 2)."
+    };
+  }
+  if (rmssd >= 75 && tsb >= -25 && tsb <= -10) {
+    const code = GREEN_TIME[time];
+    const alts = GREEN_ALTS[time].filter(c => c !== code);
+    if (forceUnlock && byCode.E2.durMin <= time + 10) alts.push("E2");
+    return {
+      status: "green", label: "🟢 GREEN — Fenêtre de construction",
+      code,
+      msg: "Système prêt : la charge est dans la zone de surcompensation. Intensité au programme.",
+      alts,
+      safety: "Cadence verrouillée > 90 rpm. Si douleur lombaire : basculer immédiatement en Z1 à 95+ rpm."
+    };
+  }
+  if (tsb > -10) {
+    // Jour frais. Si la PMA est déverrouillée (SNA au-dessus de la baseline), c'est LA fenêtre pour la Z5.
+    if (pmaUnlock) {
+      const D = time <= 45 ? "D1" : time <= 75 ? "D2" : "D3";
+      const alts = time >= 120 ? ["A3", "C3"] : ["A2", "C2"];
+      if (forceUnlock && byCode.E2.durMin <= time + 10) alts.push("E2");
+      return {
+        status: "blue", label: "🔵 BLUE — Frais · Fenêtre PMA",
+        code: D,
+        msg: "Jour de fraîcheur avec SNA au-dessus de la baseline : fenêtre idéale pour la PMA (Z5).",
+        alts,
+        safety: "Cadence élevée obligatoire sur les intervalles. Moindre signe de douleur lombaire : basculer en Z2.",
+        pma: true
+      };
+    }
+    if (forceUnlock && time >= 90) {
+      return {
+        status: "blue", label: "🔵 BLUE — Frais · Foncier + SFR",
+        code: "E3",
+        msg: "Jour frais mais SNA sous la baseline : pas de Z5 — foncier long + SFR côte, du volume utile pour les pours.",
+        alts: ["A2"],
+        safety: "Gainage actif sur les côtes ; stopper la sous-cadence après 1 h 30 de sortie."
+      };
+    }
+    return {
+      status: "blue", label: "🔵 BLUE — Frais / Entretien",
+      code: "A2",
+      msg: "Forme haute, fatigue basse : parfaite fenêtre pour du volume Z2 sans risque.",
+      alts: time >= 120 ? ["A3", "C3"] : time >= 90 ? ["A3"] : [],
+      safety: time < 60 ? "Temps court : Z2 réduit à 45 min plutôt que du Z1 inutile." : "Pas d'intensité : capitaliser la fraîcheur en volume (CTL).",
+      overrideDur: time < 60 ? "45 min" : null
+    };
+  }
+  // -30 <= tsb < -25, rmssd ok  → amber buffer zone
+  return {
+    status: "amber", label: "🟡 AMBER — Prudence",
+    code: "A2",
+    msg: "TSB entre −25 et −30 : zone tampon. Volume Z2 modéré seulement, aucune intensité.",
+    alts: ["A1"],
+    safety: "Si TSB continue de descendre, décharge demain. Rester au-dessus de −30 à tout prix."
+  };
+}
+
+function renderResult(d, time) {
+  const w = byCode[d.code];
+  const dur = d.overrideDur || w.dur;
+  const locks = computeLocks();
+  const devTxt = locks ? `Déviation VFC <b>${locks.dev >= 0 ? "+" : ""}${locks.dev.toFixed(1)} %</b>` : "";
+  const unlocks = locks
+    ? `<p class="alts">${locks.pmaUnlock ? '<span class="ok">✅</span>' : '<span class="no">❌</span>'} PMA (D1–D3) &nbsp;·&nbsp; ${locks.forceUnlock ? '<span class="ok">✅</span>' : '<span class="no">❌</span>'} Force (E1–E3)</p>`
+    : "";
+  const targets = `<span>Puissance <b>${w.wattsFn ? w.wattsFn(PARAMS.ftp) : w.watts}</b></span><span>Cadence <b>${w.cad}</b></span><span>TSS cible <b>${w.tss}</b></span><span>Durée <b>${dur}</b></span>${devTxt ? `<span>${devTxt}</span>` : ""}`;
+  const alts = d.alts && d.alts.length
+    ? `<p class="alts">Alternatives : ${d.alts.map(a => a === "REPOS"
+        ? "Repos complet"
+        : `<button type="button" data-alt="${a}">${a} — ${byCode[a].title}</button>`).join("")}</p>`
+    : "";
+  return `<div class="result-card ${d.status}" role="alert">
+    <p class="status">${d.label}</p>
+    <p style="margin-top:6px; font-size:.88rem; color:var(--text)">${d.msg}</p>
+    <div class="presc">
+      <span class="code" data-code="${d.code}" title="Voir la fiche">➡ ${d.code}</span>
+      <span class="title">${w.title} · ${dur}</span>
+    </div>
+    <div class="targets">${targets}</div>
+    ${unlocks}
+    ${alts}
+    <p class="note">🛡 ${d.safety}</p>
+  </div>`;
+}
+
+function evaluateForm() {
+  let ok = true;
+  const fields = [["rmssd", "f-rmssd"], ["tsb", "f-tsb"]];
+  const vals = {};
+  for (const [inputId, fieldId] of fields) {
+    const input = document.getElementById(inputId);
+    const field = document.getElementById(fieldId);
+    const valid = input.value !== "" && Number.isFinite(Number(input.value));
+    field.classList.toggle("invalid", !valid);
+    if (!valid) ok = false; else vals[inputId] = Number(input.value);
+  }
+  if (!ok) {
+    // inputs invalides → on repasse en état sûr : pas de reco affichée, tout verrouillé
+    const result = document.getElementById("result");
+    if (result.innerHTML) { result.innerHTML = ""; lastEval = null; updateLocks(); }
+    return false;
+  }
+  const time = Number(document.getElementById("time").value);
+  const decision = decide(vals.rmssd, vals.tsb, time);
+  Object.assign(lastEval, { code: decision.code, alts: (decision.alts || []).filter(a => a !== "REPOS") });
+  document.getElementById("result").innerHTML = renderResult(decision, time);
+  updateLocks();
+  return true;
+}
+
+document.getElementById("engine-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  evaluateForm();
+});
+
+// mise à jour en direct : tout changement d'input recalcule la reco (sans bouton)
+for (const id of ["rmssd", "tsb", "time"]) {
+  document.getElementById(id).addEventListener("input", evaluateForm);
+}
+
+// result card interactions: jump to workout card, alt selection
+document.getElementById("result").addEventListener("click", (e) => {
+  const jump = e.target.closest("[data-code]");
+  if (jump && byCode[jump.dataset.code]) {
+    const card = document.getElementById("card-" + jump.dataset.code);
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash");
+    return;
+  }
+  const alt = e.target.closest("[data-alt]");
+  if (alt && byCode[alt.dataset.alt]) {
+    const card = document.getElementById("card-" + alt.dataset.alt);
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash");
+  }
+});
+
+/* =============== Liens vers le glossaire =============== */
+const GLOSSARY_TERMS = [
+  { re: /\bFTP\b/g, id: "gl-ftp" },
+  { re: /\bCTL\b/g, id: "gl-ctl" },
+  { re: /\bATL\b/g, id: "gl-atl" },
+  { re: /\bTSB\b/g, id: "gl-tsb" },
+  { re: /\bTSS\b/g, id: "gl-tss" },
+  { re: /\bVFC\b/g, id: "gl-vfc" },
+  { re: /\brMSSD\b/g, id: "gl-rmssd" },
+  { re: /VO₂ max/g, id: "gl-vo2" }
+];
+
+function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+function linkifyTerms(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  for (const node of nodes) {
+    const txt = node.nodeValue;
+    if (!txt.trim()) continue;
+    const parent = node.parentElement;
+    if (!parent || parent.closest("script, style, a, .glink, #view-glossary, #gl-")) continue;
+    let html = esc(txt), changed = false;
+    for (const t of GLOSSARY_TERMS) {
+      if (t.re.test(html.replace(/<[^>]+>/g, ""))) {
+        // ne pas re-lier à l'intérieur d'une balise déjà insérée
+        html = html.replace(t.re, m => `<a class="glink" data-term="${t.id}">${m}</a>`);
+        changed = true;
+      }
+    }
+    if (changed) {
+      const span = document.createElement("span");
+      span.innerHTML = html;
+      node.replaceWith(span);
+    }
+  }
+}
+
+// application sur tout le contenu statique (hors glossaire)
+linkifyTerms(document.querySelector("main"));
+
+// clic sur un terme → onglet Glossaire + ancre + flash
+document.addEventListener("click", (e) => {
+  const g = e.target.closest("a.glink");
+  if (!g) return;
+  e.preventDefault();
+  const tab = document.querySelector('button[data-view="glossary"]');
+  if (!document.getElementById("view-glossary").classList.contains("active")) tab.click();
+  const entry = document.getElementById(g.dataset.term);
+  if (!entry) return;
+  entry.scrollIntoView({ behavior: "smooth", block: "center" });
+  entry.style.background = "rgba(88,166,255,.12)";
+  entry.style.borderRadius = "6px";
+  entry.style.transition = "background 1.5s";
+  setTimeout(() => entry.style.background = "transparent", 1200);
+});
+
+// lien interne vers un autre onglet (ex. onglet Profil depuis le Playbook)
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("a.tablink");
+  if (!t) return;
+  e.preventDefault();
+  const btn = document.querySelector(`button[data-view="${t.dataset.view}"]`);
+  if (btn) btn.click();
+  const focus = t.dataset.focus;
+  if (focus) {
+    setTimeout(() => {
+      const el = document.getElementById(focus);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.style.borderColor = "var(--accent)";
+        el.style.transition = "border-color 1.5s";
+        setTimeout(() => el.style.borderColor = "", 1200);
+      }
+    }, 60);
+  }
+});
+
+// re-linkify après chaque rendu dynamique (résultat du moteur)
+const _origRenderResult = renderResult;
+renderResult = function (d, time) {
+  const html = _origRenderResult(d, time);
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  linkifyTerms(div);
+  return div.innerHTML;
+};
+
+loadState();
+renderMatrix();
+
+/* =============== Tab navigation =============== */
+const tabs = document.getElementById("tabs");
+tabs.addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-view]");
+  if (!btn) return;
+  const name = btn.dataset.view;
+  tabs.querySelectorAll("button").forEach(b => b.classList.toggle("active", b === btn));
+  document.querySelectorAll(".view").forEach(v =>
+    v.classList.toggle("active", v.id === "view-" + name));
+  history.replaceState(null, "", "#" + name);
+  window.scrollTo({ top: 0 });
+});
+// deep link on load + hash change
+function applyHash() {
+  const h = location.hash.replace("#", "");
+  if (["logic", "dashboard", "zones", "profile", "glossary"].includes(h)) {
+    document.querySelector(`button[data-view="${h}"]`).click();
+  }
+}
+applyHash();
+window.addEventListener("hashchange", applyHash);
+
+/* =============== User Profile =============== */
+const PROFILE_GROUPS = [
+  { title: "Performance — ce qui calibre l'entraînement", fields: [
+    { key: "ftp", label: "FTP — Functional Threshold Power", unit: "W", step: 1,
+      desc: "Puissance maximale tenable ~1 h. Référence de toutes les zones de puissance et du calcul de charge (TSS). Les séances de la bibliothèque sont calibrées sur cette valeur." },
+    { key: "vo2", label: "VO₂ max", unit: "ml/kg/min", step: 0.5,
+      desc: "Capacité aérobie maximale — le plafond de performance. Estimée par Garmin au fil des sorties ou mesurée en labo." },
+    { key: "weight", label: "Poids", unit: "kg", step: 0.5,
+      desc: "Sert au calcul de la puissance relative (W/kg) — la vraie mesure de votre niveau en côte." }
+  ]},
+  { title: "Récupération — ce qui pilote la décision quotidienne", fields: [
+    { key: "hrv", label: "VFC 7j — moyenne 7 jours", unit: "ms", step: 1,
+      desc: "Moyenne de la variabilité cardiaque sur 7 jours (rMSSD). C'est la référence à laquelle le moteur de décision compare votre mesure du matin." },
+    { key: "rhr", label: "FC repos", unit: "bpm", step: 1,
+      desc: "Fréquence cardiaque au réveil. Une dérive à la hausse sur plusieurs jours signale une récupération incomplète." }
+  ]},
+  { title: "Fréquence cardiaque — alimente l'onglet Zones", fields: [
+    { key: "hrmax", label: "FC max", unit: "bpm", step: 1,
+      desc: "Fréquence cardiaque maximale (profil standard, ex. course à pied). Base des zones FC standard de l'onglet Zones." },
+    { key: "hrmaxBike", label: "FC max cyclisme", unit: "bpm", step: 1,
+      desc: "Généralement 5–10 bpm plus basse qu'à pied. Base des zones FC cyclisme de l'onglet Zones." }
+  ]}
+];
+const PROFILE_FIELDS = PROFILE_GROUPS.flatMap(g => g.fields);
+const GL_TERM_FOR = { ftp: "gl-ftp", vo2: "gl-vo2", weight: "gl-weight", hrv: "gl-vfc", rhr: "gl-rhr", hrmax: "gl-hrmax", hrmaxBike: "gl-hrmax" };
+
+function renderProfile() {
+  document.getElementById("profile-grid").innerHTML = PROFILE_GROUPS.map(g => `
+    <div style="grid-column: 1 / -1">
+      <h3 style="font-size:.85rem; text-transform:uppercase; letter-spacing:.8px; color:var(--text-dim); margin:14px 0 2px">${g.title}</h3>
+    </div>` +
+    g.fields.map(f => `
+    <div class="profile-card">
+      <h4>${f.label} <a class="glink ilink" data-term="${GL_TERM_FOR[f.key] || ""}" title="Voir la définition dans le Glossaire">ⓘ</a></h4>
+      <div class="field">
+        <input type="number" id="profile-${f.key}" step="${f.step}" inputmode="numeric">
+        <span class="unit">${f.unit}</span>
+      </div>
+      <p class="desc">${f.desc}</p>
+    </div>`).join("")).join("");
+  for (const f of PROFILE_FIELDS) {
+    document.getElementById("profile-" + f.key).addEventListener("input", (e) => setParam(f.key, e.target.value));
+  }
+  const goalInput = document.getElementById("profile-goal");
+  goalInput.addEventListener("input", (e) => {
+    GOAL = e.target.value.trim();
+    document.getElementById("goal-text").textContent = "Objectif : " + (GOAL || "—");
+    saveState();
+  });
+}
+renderProfile();
+
+/* =============== Barre polarisée (volume par zone, zones Garmin éditées) =============== */
+const POLAR_VOLUME = [5, 70, 10, 10, 3, 1.5, 0.5]; // % du temps hebdo, par zone (modèle polarisé)
+
+function renderPolarBar() {
+  const z2 = POWER_ZONES[1];
+  document.getElementById("polar-z2-watts").textContent =
+    `${Math.round(PARAMS.ftp * z2.band[0])}–${Math.round(PARAMS.ftp * z2.band[1])} W`;
+  document.getElementById("polar-bar").innerHTML = POWER_ZONES.map((z, i) => {
+    const vol = POLAR_VOLUME[i];
+    const lo = Math.round(PARAMS.ftp * z.band[0]);
+    const hi = z.band[1] === Infinity ? null : Math.round(PARAMS.ftp * z.band[1]);
+    const watts = hi === null ? `> ${lo} W` : `${lo}–${hi} W`;
+    const label = vol >= 5 ? `${z.z} · ${vol}%` : z.z;
+    return `<div class="z${i + 1}" style="flex-grow:${vol}; flex-basis:0; min-width:26px" title="${z.z} ${z.name} — ${watts} : ~${vol}% du volume hebdomadaire">${label}</div>`;
+  }).join("");
+}
+
+/* =============== Zones dynamiques (puissance + FC) =============== */
+const HR_NAMES = ["Warm up", "Easy", "Aerobic", "Threshold", "Maximum"];
+const HR_BANDS_STD  = [[0.5, 0.6], [0.6, 0.7], [0.7, 0.8], [0.8, 0.9], [0.9, 1.0]];
+const HR_BANDS_BIKE = [[0.45, 0.54], [0.54, 0.63], [0.63, 0.72], [0.72, 0.81], [0.81, 1.0]];
+
+function renderHrTable(tableId, inputId, paramKey, bands) {
+  const input = document.getElementById(inputId);
+  const hrmax = PARAMS[paramKey];
+  if (document.activeElement !== input) input.value = hrmax;
+  document.getElementById(tableId).innerHTML =
+    `<tr><th>Zone</th><th>Nom Garmin</th><th>% FC max</th><th>Fréquence cardiaque</th></tr>` +
+    bands.map((b, i) => {
+      const lo = Math.round(hrmax * b[0]);
+      const hi = Math.round(hrmax * b[1]);
+      return `<tr class="zc${i + 1}"><td class="zname">Z${i + 1}</td><td><b>${HR_NAMES[i]}</b></td>` +
+             `<td>${Math.round(b[0] * 100)}–${Math.round(b[1] * 100)} %</td><td><b>${lo}–${hi} bpm</b></td></tr>`;
+    }).join("");
+}
+
+const POWER_ZONES = [
+  { z: "Z1", name: "Active Recovery", pct: "&lt; 55 %",  band: [0, 0.54],  usage: "Récupération, décrassage (A1)" },
+  { z: "Z2", name: "Endurance",       pct: "55–74 %",  band: [0.55, 0.74], usage: "Base volume, foncier (A2/A3)" },
+  { z: "Z3", name: "Tempo",           pct: "75–89 %",  band: [0.75, 0.89], usage: "Tempo, sweetspot bas (B3, C1)" },
+  { z: "Z4", name: "Threshold",        pct: "90–105 %", band: [0.90, 1.05], usage: "Sous-seuil, sweetspot (B1/B2)" },
+  { z: "Z5", name: "VO2 Max",          pct: "106–119 %", band: [1.06, 1.19], usage: "Sports courts uniquement (C3)" },
+  { z: "Z6", name: "Anaerobic",       pct: "120–150 %", band: [1.20, 1.50], usage: "Efforts très courts (30 s–2 min) — haute fatigue neuro-musculaire" },
+  { z: "Z7", name: "Neuromuscular",   pct: "&gt; 150 %", band: [1.50, Infinity], usage: "Sprints (< 30 s) — risque musculo-squelettique élevé, à réserver à un objectif précis" }
+];
+
+function renderPowerZones() {
+  const input = document.getElementById("ftp-input");
+  if (document.activeElement !== input) input.value = PARAMS.ftp;
+  const ftp = PARAMS.ftp;
+  document.getElementById("power-table").innerHTML =
+    `<tr><th>Zone</th><th>Nom Garmin</th><th>% FTP</th><th>Puissance</th><th>Usage principal</th></tr>` +
+    POWER_ZONES.map((z, i) => {
+      const lo = Math.round(ftp * z.band[0]);
+      const hi = z.band[1] === Infinity ? null : Math.round(ftp * z.band[1]);
+      const watts = hi === null
+        ? `&gt; ${lo} W`
+        : lo === 0 ? `&lt; ${hi} W` : `${lo}–${hi} W`;
+      return `<tr class="zc${i + 1}"><td class="zname">${z.z}</td><td><b>${z.name}</b></td>` +
+             `<td>${z.pct}</td><td><b>${watts}</b></td><td>${z.usage}</td></tr>`;
+    }).join("");
+}
+document.getElementById("ftp-input").addEventListener("input", (e) => setParam("ftp", e.target.value));
+renderPowerZones();
+
+function renderHrZones() {
+  renderHrTable("hr-table", "hrmax", "hrmax", HR_BANDS_STD);
+  renderHrTable("hr-table-bike", "hrmax-bike", "hrmaxBike", HR_BANDS_BIKE);
+}
+document.getElementById("hrmax").addEventListener("input", (e) => setParam("hrmax", e.target.value));
+document.getElementById("hrmax-bike").addEventListener("input", (e) => setParam("hrmaxBike", e.target.value));
+renderHrZones();
+renderPolarBar();
+renderHeader();
+
+</script>
+</body>
+</html>
